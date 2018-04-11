@@ -1,6 +1,7 @@
 #if !defined(TestFramework_StreamForTestOutput_h_)
 #define TestFramework_StreamForTestOutput_h_
 
+#include "stream_any.h"
 #include <ostream>
 
 namespace UnitTests
@@ -84,7 +85,7 @@ namespace UnitTests
 		template<class T>
 			std::ostream& operator<<(std::ostream& os, const expected_got_outputter<T> & t)
 		{	
-				return os << t.t; // img::stream_any(t.t);
+				return os << stream_any(t.t);
 		}
 
 		inline std::ostream& operator<<(std::ostream& os, const expected_got_outputter<std::string> & t)

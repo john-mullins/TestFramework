@@ -105,6 +105,30 @@
 
 namespace UnitTests
 {
+    // this makes an array look like a container, for functions/algorithms that expect an array.
+    // e.g.
+    // std::string bits[] = { "a", "b", "c" };
+    // std::string s = join(as_container(bits), "");
+    // ASSERT_EQUALS("abc", s);
+    template<typename T, size_t N>
+    struct container
+    {
+        container(T (&a)[ N ]) : begin_(a), end_(a + N) {}
+        typedef typename std::remove_const_t<T> value_type;
+        typedef const T* const_iterator;
+        const_iterator begin() const    { return begin_;    }
+        const_iterator end() const      { return end_;      }
+        size_t size() const             { return N;         }
+        bool empty() const              { return N == 0;    }
+        const_iterator begin_;
+        const_iterator end_;
+    };
+    template<typename T, size_t N>
+    container<T, N> as_container(T (&a)[ N ])
+    {
+        return container<T, N>(a);
+    }
+
     template <class T, class U> constexpr auto select_args1(const T& a, const U& b) { return true ? a : b; }
 	template <class T>
 		bool are_equal(const T& lhs, const T& rhs)
@@ -219,6 +243,7 @@ namespace UnitTests
 				Error(msg + " Expression evaluated to false");
 			}
 		}
+
 #if 0
 		template<typename Value, typename Container>
 			void In(const std::string& msg, Value value, Container container) const
@@ -233,13 +258,13 @@ namespace UnitTests
 		template<typename Value, typename ContainerValue, size_t ContainerN> 
 			void In(const std::string& msg, Value value, ContainerValue (&container)[ ContainerN]) const
 		{
-			In(msg, value, img::array::as_container(container));
+			In(msg, value, as_container(container));
 		}
         
 		template<typename Value, typename ContainerValue, size_t ContainerN> 
 			void In(Value value, ContainerValue (&container)[ ContainerN]) const
 		{
-			In(std::string(), value, img::array::as_container(container));
+			In(std::string(), value, as_container(container));
 		}
         
 		template<typename T, typename Container>
@@ -286,13 +311,13 @@ namespace UnitTests
         template<typename Value, typename ContainerValue, size_t ContainerN>
 			void NotIn(const std::string& msg, Value value, ContainerValue (&container)[ ContainerN]) const
 		{
-			NotIn(msg, value, img::array::as_container(container));
+			NotIn(msg, value, as_container(container));
 		}
 		
         template<typename Value, typename ContainerValue, size_t ContainerN>
 			void NotIn(Value value, ContainerValue (&container)[ ContainerN]) const
 		{
-			NotIn(std::string(), value, img::array::as_container(container));
+			NotIn(std::string(), value, as_container(container));
 		}
 		
         template<typename T, typename Container>
@@ -337,7 +362,7 @@ namespace UnitTests
 		{
 			LargeStringEquals(std::string(), expected, got);
 		}
-#if 0
+
 		template<class ExpectedIt, class GotIterator> 
 			void RangeEquals(const std::string& msg, ExpectedIt expected_first, ExpectedIt expected_last, GotIterator got_first, GotIterator got_last) const
 		{
@@ -382,33 +407,33 @@ namespace UnitTests
 		template<class ExpectedRange, typename GotValue, size_t GotN> 
 			void RangeEquals(ExpectedRange expected, GotValue (&got)[ GotN ]) const
 		{
-			RangeEquals(std::string(), expected, img::array::as_container(got));
+			RangeEquals(std::string(), expected, as_container(got));
 		}
 
 		template<typename ExpectedValue, size_t ExpectedN, typename GotValue, size_t GotN> 
 			void RangeEquals(ExpectedValue (&expected)[ ExpectedN ], GotValue (&got)[ GotN ]) const
 		{
-			RangeEquals(std::string(), img::array::as_container(expected), img::array::as_container(got));
+			RangeEquals(std::string(), as_container(expected), as_container(got));
 		}
 
 		template<typename ExpectedValue, size_t ExpectedN, class GotRange> 
 			void RangeEquals(const std::string& msg, ExpectedValue (&expected)[ ExpectedN ], GotRange got) const
 		{
-			RangeEquals(msg, img::array::as_container(expected), got);
+			RangeEquals(msg, as_container(expected), got);
 		}
 
 		template<class ExpectedRange, typename GotValue, size_t GotN> 
 			void RangeEquals(const std::string& msg, ExpectedRange expected, GotValue (&got)[ GotN ]) const
 		{
-			RangeEquals(msg, expected, img::array::as_container(got));
+			RangeEquals(msg, expected, as_container(got));
 		}
 
 		template<typename ExpectedValue, size_t ExpectedN, typename GotValue, size_t GotN> 
 			void RangeEquals(const std::string& msg, ExpectedValue (&expected)[ ExpectedN ], GotValue (&got)[ GotN ]) const
 		{
-			RangeEquals(msg, img::array::as_container(expected), img::array::as_container(got));
+			RangeEquals(msg, as_container(expected), as_container(got));
 		}
-#endif
+
 #if 0
 		void MultiLineEquals(std::vector<std::string> expected, std::vector<std::string> got)
 		{
@@ -433,7 +458,7 @@ namespace UnitTests
 		// Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
 		void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
 		{
-			size_t width = std::max_element(expected.begin(), expected.end(), std::bind(&std::string::size, _1) < std::bind(&std::string::size, _2))->size();
+            size_t width = std::max_element(expected.begin(), expected.end(), std::bind(&std::string::size, std::placeholders::_1) < std::bind(&std::string::size, std::placeholders::_2))->size();
 			std::vector<std::string> e, g;
 			e.reserve(expected.size());
 			g.reserve(got.size());
@@ -444,25 +469,46 @@ namespace UnitTests
         
 		void MultiLineEquals(std::string message, std::vector<std::string> expected, std::string got)
 		{
-			MultiLineEquals(message, expected, img::split(got, "\n"));
+			MultiLineEquals(message, expected, split(got, "\n"));
 		}
         
 		void MultiLineEquals(std::string message, std::string expected, std::vector<std::string> got)
 		{
-			MultiLineEquals(message, img::split(expected, "\n"), got);
+			MultiLineEquals(message, split(expected, "\n"), got);
 		}
         
 		void MultiLineEquals(std::string message, std::string expected, std::string got)
 		{
-			MultiLineEquals(message, expected, img::split(got, "\n"));
+			MultiLineEquals(message, expected, split(got, "\n"));
 		}
-	
 #endif
+
 	private:
 		void Error(const std::string& msg) const
 		{
 			throw TestFailure(msg, m_file, m_line);
 		}
+
+        inline std::vector<std::string> split(const std::string& s, const char* delims = " \t\r\n\v" )
+        {
+            std::vector<std::string> results;
+            
+            auto start = s.find_first_not_of(delims);
+            
+            while (start != std::string::npos)
+            {
+                auto end = s.find_first_of(delims, start);
+                if (end != start)
+                {
+                    results.emplace_back(s, start, end == std::string::npos ? std::string::npos : end - start);
+                }
+                
+                start = s.find_first_not_of(delims, end);
+            }
+            
+            return results;
+        }
+
 		template<class FwdIt>
 		void join(FwdIt begin, FwdIt end, const std::string& delim, std::ostream& stream)
 		{
