@@ -509,9 +509,7 @@ namespace UnitTests
             {
                 auto end = s.find_first_of(delims, start);
                 if (end != start)
-                {
                     results.emplace_back(s, start, end == std::string::npos ? std::string::npos : end - start);
-                }
                 
                 start = s.find_first_not_of(delims, end);
             }

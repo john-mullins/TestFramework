@@ -44,10 +44,10 @@ namespace UnitTests
 			s << std::hex << std::showbase << t << std::noshowbase << std::dec;
 		}
 
-        inline void output(std::ostream& s, unsigned char t, const std::true_type&)	{output_unsigned(s, static_cast<unsigned int>(t));		}
-		inline void output(std::ostream& s, unsigned short t, const std::true_type&)	{output_unsigned(s, t);     }
-		inline void output(std::ostream& s, unsigned int t, const std::true_type&)	{output_unsigned(s, t);     }
-		inline void output(std::ostream& s, unsigned long long t, const std::true_type&) {output_unsigned(s, t);     }
+        inline void output(std::ostream& s, unsigned char t, const std::true_type&)	    { output_unsigned(s, static_cast<unsigned int>(t));     }
+		inline void output(std::ostream& s, unsigned short t, const std::true_type&)    { output_unsigned(s, t);                                }
+        inline void output(std::ostream& s, unsigned int t, const std::true_type&)      { output_unsigned(s, t);                                }
+		inline void output(std::ostream& s, unsigned long long t, const std::true_type&){ output_unsigned(s, t);                                }
 
 		// here provide some overloads for some fairly common types that we can introspect, and stream_any a bit deeper.
 
@@ -58,7 +58,6 @@ namespace UnitTests
 			outputter(const T& t) : t(t) {}
 			const T& t;
 		};
-
 	}
 
 	template<class T>
@@ -72,7 +71,6 @@ namespace UnitTests
 		{
 			s << "(" << stream_any(pair.first) << ", " << stream_any(pair.second) << ")";
 		}
-
 
 		template<typename FwdIt>
 			void output_range(std::ostream& s, FwdIt begin, FwdIt end)
@@ -91,31 +89,37 @@ namespace UnitTests
 		{
 			output_range(s, c.begin(), c.end());
 		}
+        
 		template<typename Type>
 			void output(std::ostream& s, const std::list<Type>& c, const std::false_type&)
 		{
 			output_range(s, c.begin(), c.end());
 		}
+        
 		template<typename KeyType, typename ValueType>
 			void output(std::ostream& s, const std::map<KeyType, ValueType>& c, const std::false_type&)
 		{
 			output_range(s, c.begin(), c.end());
 		}
+        
 		template<typename KeyType, typename ValueType>
 			void output(std::ostream& s, const std::multimap<KeyType, ValueType>& c, const std::false_type&)
 		{
 			output_range(s, c.begin(), c.end());
 		}
+        
 		template<typename Type>
 			void output(std::ostream& s, const std::set<Type>& c, const std::false_type&)
 		{
 			output_range(s, c.begin(), c.end());
 		}
+        
 		template<typename Type>
 			void output(std::ostream& s, const std::multiset<Type>& c, const std::false_type&)
 		{
 			output_range(s, c.begin(), c.end());
 		}
+        
 		template<typename Type>
 			void output(std::ostream& s, const std::deque<Type>& c, const std::false_type&)
 		{
@@ -141,7 +145,6 @@ namespace UnitTests
 		{
 			s << str;
 		}
-
 
 		template<class T>
 			std::ostream& operator<<(std::ostream& s, const outputter<T> & t)

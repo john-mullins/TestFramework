@@ -7,7 +7,6 @@
 
 #include <exception>
 #include <string>
-//#include "imgleeds/imgleeds/to_string.h"
 
 namespace UnitTests
 {
@@ -21,7 +20,6 @@ namespace UnitTests
 		UnexpectedException,
 		UnknownUnexpectedException
 	};
-
 
 	class TestFailure : public std::exception
 	{

@@ -53,8 +53,7 @@ namespace UnitTests
 		{
 			// Does the actual test, essentially tests the return value of Stream << Type, and works out which 
 			// overload was called.  This has to be in this namespace, or else << is not looked up correctly.
-            static constexpr bool value = sizeof(is_streamable_result(create_a<std::ostream&>() << create_a<const T&>()))
-                        == sizeof(yes_tag);
+            static constexpr bool value = sizeof(is_streamable_result(create_a<std::ostream&>() << create_a<const T&>())) == sizeof(yes_tag);
         };
 	}
 

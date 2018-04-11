@@ -183,22 +183,22 @@ namespace UnitTests
             
 
     #define TEST_MAIN()                                                                                               \
-        UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                              \
+        UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
         {                                                                                                             \
-            static UnitTests::MiniSuite runner;                                                                  \
+            static UnitTests::MiniSuite runner;                                                                       \
             return runner;                                                                                            \
         }                                                                                                             \
         std::string UnitTests::FormatError(const std::string& file, int line, int error)                              \
         {                                                                                                             \
             std::string msg = file;                                                                                   \
-            msg += "(" + std::to_string(line) + ")";                                                          \
-            msg += " : error A" + std::to_string(error) + ": ";                                               \
+            msg += "(" + std::to_string(line) + ")";                                                                  \
+            msg += " : error A" + std::to_string(error) + ": ";                                                       \
             return msg;                                                                                               \
         }                                                                                                             \
         int main(int argc, char ** argv)                                                                              \
         {                                                                                                             \
             std::vector<std::string> args;                                                       \
-            return UnitTests::MiniSuite::Instance().RunTests(args);                                                       \
+            return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
         }                                                                                                             \
     /**/
 
