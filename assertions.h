@@ -114,7 +114,7 @@ namespace UnitTests
     struct container
     {
         container(T (&a)[ N ]) : begin_(a), end_(a + N) {}
-        typedef typename std::remove_const_t<T> value_type;
+        typedef typename std::remove_const<T>::type value_type;
         typedef const T* const_iterator;
         const_iterator begin() const    { return begin_;    }
         const_iterator end() const      { return end_;      }
@@ -129,7 +129,7 @@ namespace UnitTests
         return container<T, N>(a);
     }
 
-    template <class T, class U> constexpr auto select_args1(const T& a, const U& b) { return true ? a : b; }
+    template <class T, class U> constexpr auto select_args1(const T& a, const U& b)->decltype(true ? a : b) { return true ? a : b; }
 	template <class T>
 		bool are_equal(const T& lhs, const T& rhs)
 	{
