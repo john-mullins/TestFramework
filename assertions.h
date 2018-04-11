@@ -463,7 +463,33 @@ namespace UnitTests
 		{
 			throw TestFailure(msg, m_file, m_line);
 		}
-#if 0
+		template<class FwdIt>
+		void join(FwdIt begin, FwdIt end, const std::string& delim, std::ostream& stream)
+		{
+			if (begin != end)
+			{
+				stream << *begin;
+				for (++begin; begin != end; ++begin)
+				{
+					stream << delim << *begin;
+				}
+			}
+		}
+
+		template<class FwdIt>
+		std::string join(FwdIt begin, FwdIt end, const std::string& delim)
+		{
+			std::ostringstream	stream;
+			join(begin, end, delim, stream);
+			return stream.str();
+		}
+
+		template<class Range>
+		std::string join(Range range, const std::string& delim)
+		{
+			return join(range.begin(), range.end(), delim);
+		}
+
 		template<typename Value, typename ContainerIterator>
 			void ContainmentError(const std::string& msg, const std::string& msg2, Value value, ContainerIterator begin, ContainerIterator end) const
 		{
@@ -476,7 +502,7 @@ namespace UnitTests
 			s << msg2 << " ";
 			s << stream(value);
 			s << ", actual contents :\n\t";
-			img::join(begin, end, "\n\t", s);
+			join(begin, end, "\n\t", s);
 			s << "\n";
 			Error(s.str());
 		}
@@ -495,7 +521,6 @@ namespace UnitTests
 			OutputRange(s, expected_first, expected_last, got_first, got_last, indicate);
 			Error(s.str());		
 		}
-#endif
 		const char *	m_file;
 		int				m_line;
 	};
