@@ -13,16 +13,16 @@
 #define ASSERT_NOT_EQUALS			UnitTests::Assert(__FILE__, __LINE__).NotEquals
 #define ASSERT_TRUE					UnitTests::Assert(__FILE__, __LINE__).True
 #define ASSERT_FALSE				UnitTests::Assert(__FILE__, __LINE__).False
-#define ASSERT_IN					UnitTests::Assert(__FILE__, __LINE__).In
-#define ASSERT_NOT_IN				UnitTests::Assert(__FILE__, __LINE__).NotIn
+//#define ASSERT_IN					UnitTests::Assert(__FILE__, __LINE__).In
+//#define ASSERT_NOT_IN				UnitTests::Assert(__FILE__, __LINE__).NotIn
 #define FAIL						UnitTests::Assert(__FILE__, __LINE__).Fail
-#define ASSERT_FILES_EQUAL			UnitTests::Assert(__FILE__, __LINE__).FilesEqual
-#define ASSERT_LARGE_STRING_EQUALS	UnitTests::Assert(__FILE__, __LINE__).LargeStringEquals
+//#define ASSERT_FILES_EQUAL			UnitTests::Assert(__FILE__, __LINE__).FilesEqual
+//#define ASSERT_LARGE_STRING_EQUALS	UnitTests::Assert(__FILE__, __LINE__).LargeStringEquals
 #define ASSERT_RANGE_EQUALS			UnitTests::Assert(__FILE__, __LINE__).RangeEquals
 
 // Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
 // compare multiline strings making it easier to spot differences when they are different
-#define ASSERT_MULTI_LINE_EQUALS  UnitTests::Assert(__FILE__, __LINE__).MultiLineEquals
+//#define ASSERT_MULTI_LINE_EQUALS  UnitTests::Assert(__FILE__, __LINE__).MultiLineEquals
 
 // use ASSERT_THROWS and ASSERT_THROWS_MSG to assert that code should test that code
 // e.g.
