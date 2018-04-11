@@ -22,7 +22,7 @@
 
 // Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
 // compare multiline strings making it easier to spot differences when they are different
-//#define ASSERT_MULTI_LINE_EQUALS  UnitTests::Assert(__FILE__, __LINE__).MultiLineEquals
+#define ASSERT_MULTI_LINE_EQUALS  UnitTests::Assert(__FILE__, __LINE__).MultiLineEquals
 
 // use ASSERT_THROWS and ASSERT_THROWS_MSG to assert that code should test that code
 // e.g.
@@ -437,7 +437,27 @@ namespace UnitTests
             RangeEquals(msg, as_container(expected), as_container(got));
         }
 
-#if 0
+        inline std::string spacer(const std::string& s, size_t width, char fillchar)
+        {
+            return s.size() < width ? std::string(width - s.size(), fillchar) : std::string();
+        }
+
+        // like pythons functions of the same name (in module string and string methods)
+        inline std::string ljust(const std::string& s, size_t width, char fillchar = ' ') { return s + spacer(s, width, fillchar); }
+        inline std::string rjust(const std::string& s, size_t width, char fillchar = ' ') { return spacer(s, width, fillchar) + s; }
+        
+        // Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
+        void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
+        {
+            size_t width = std::max_element(expected.begin(), expected.end(),  [] (const std::string& s1, const std::string& s2) { return s1.size() < s2.size(); } )->size();
+            std::vector<std::string> e, g;
+            e.reserve(expected.size());
+            g.reserve(got.size());
+            std::transform(expected.begin(), expected.end(), std::back_inserter(e), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
+            std::transform(got.begin(),      got.end(),      std::back_inserter(g), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
+            RangeEquals(message, e, g);
+        }
+
 		void MultiLineEquals(std::vector<std::string> expected, std::vector<std::string> got)
 		{
 			MultiLineEquals(std::string(), expected, got);
@@ -457,20 +477,8 @@ namespace UnitTests
 		{
 			MultiLineEquals(std::string(), expected, got);
 		}
-        
-		// Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
-		void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
-		{
-            size_t width = std::max_element(expected.begin(), expected.end(), std::bind(&std::string::size, std::placeholders::_1) < std::bind(&std::string::size, std::placeholders::_2))->size();
-			std::vector<std::string> e, g;
-			e.reserve(expected.size());
-			g.reserve(got.size());
-			std::transform(expected.begin(), expected.end(), std::back_inserter(e), std::bind(img::ljust, _1, width, ' '));
-			std::transform(got.begin(),      got.end(),      std::back_inserter(g), std::bind(img::ljust, _1, width, ' '));
-			RangeEquals(message, e, g);
-		}
-        
-		void MultiLineEquals(std::string message, std::vector<std::string> expected, std::string got)
+
+        void MultiLineEquals(std::string message, std::vector<std::string> expected, std::string got)
 		{
 			MultiLineEquals(message, expected, split(got, "\n"));
 		}
@@ -484,7 +492,6 @@ namespace UnitTests
 		{
 			MultiLineEquals(message, expected, split(got, "\n"));
 		}
-#endif
 
     private:
         void Error(const std::string& msg) const
