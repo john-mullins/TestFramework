@@ -8,10 +8,14 @@
 
 namespace UnitTests
 {
-	//#    define PP_CAT(a, b) PP_CAT_OO((a, b))
-	//#    define PP_CAT_OO(par) PP_CAT_I ## par
-	#    define PP_CAT(a, b) a ## b
-
+#    define PP_CAT(a, b) PP_CAT_I(a, b)
+#    if !defined(_MSC_VER)
+#       define PP_CAT_I(a, b) a ## b
+#   else
+#       define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
+#       define PP_CAT_II(p, res) res
+#   endif
+    
     class MiniSuite
     {
     public:
@@ -157,13 +161,13 @@ namespace UnitTests
         std::vector<Test*> tests;
     };
 
-	#define TEST(name) void name();																	\
-        namespace {																						\
-            namespace PP_CAT(unique, __LINE__) {																\
-                const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddTest(name, #name, __FILE__, __LINE__);  \
-            }																							\
-        }																								\
-        void name()                                                                                     \
+	#define TEST(name) void name();                                                                                             \
+        namespace {                                                                                                             \
+            namespace PP_CAT(unique, __LINE__) {                                                                                \
+                const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddTest(name, #name, __FILE__, __LINE__);   \
+            }                                                                                                                   \
+        }                                                                                                                       \
+        void name()                                                                                                             \
     /**/    
     
 
@@ -180,7 +184,6 @@ namespace UnitTests
 		}																											\
 		template<typename T> void name::operator()(const T& param) const											\
 	/**/        
-            
 
     #define TEST_MAIN()                                                                                               \
         UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
@@ -197,7 +200,7 @@ namespace UnitTests
         }                                                                                                             \
         int main(int argc, char ** argv)                                                                              \
         {                                                                                                             \
-            std::vector<std::string> args;                                                       \
+            std::vector<std::string> args;                                                                            \
             return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
         }                                                                                                             \
     /**/
