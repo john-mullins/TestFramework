@@ -71,7 +71,8 @@ namespace UnitTests
 
             virtual	void Run(size_t index) const override 
             {
-                fn(*(cont.begin() + index));                
+                auto&& args = *(cont.begin() + index);
+                fn(args, args);
             }
             
         private:
@@ -175,14 +176,14 @@ namespace UnitTests
 		struct name																									\
 		{																											\
 			template<typename T>																					\
-				void operator()(const T& param) const;																\
+				void operator()(const T& param, const T& args) const;																\
 		};																											\
 		namespace	{																								\
 			namespace PP_CAT(unique, __LINE__)	{															\
 				const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);				\
 			}																										\
 		}																											\
-		template<typename T> void name::operator()(const T& param) const											\
+		template<typename T> void name::operator()(const T& param, const T& args) const								\
 	/**/        
 
     #define TEST_MAIN()                                                                                               \
