@@ -25,22 +25,22 @@ namespace UnitTests
         {
         public:
             Test(const std::string& name, const char * file, int line) : name(name), file(file), line(line) {}
-                
+            
             virtual void Run(size_t) const = 0;
             virtual size_t NumTests() const = 0;
-            virtual ~Test() {} 
-        
-            std::string     name;    
+            virtual ~Test() {}
+            
+            std::string     name;
             const char *    file;
-            int             line;    
-        };        
+            int             line;
+        };
         
         class FunctionTest : public Test
         {
         public:
-            FunctionTest(void (*fn)(), const std::string& name, const char * file, int line) 
+            FunctionTest(void (*fn)(), const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
-                    fn(fn)
+            fn(fn)
             {
             }
             
@@ -52,24 +52,24 @@ namespace UnitTests
         };
         
         template<class Container, class Function>
-            class ParamFunctionTest : public Test
+        class ParamFunctionTest : public Test
         {
         public:
             typedef typename Container::value_type						param_type;
-
+            
             ParamFunctionTest(const Container& cont, const Function& fn, const std::string& name, const char * file, int line)
-                :	Test(name, file, line),
-                    cont(cont),
-                    fn(fn)
+                :   Test(name, file, line),
+            cont(cont),
+            fn(fn)
             {
             }
-
-            virtual	size_t NumTests() const override 
+            
+            virtual	size_t NumTests() const override
             {
                 return std::distance(cont.begin(), cont.end());
             }
-
-            virtual	void Run(size_t index) const override 
+            
+            virtual	void Run(size_t index) const override
             {
                 auto&& args = *(cont.begin() + index);
                 fn(args, args);
@@ -79,9 +79,7 @@ namespace UnitTests
             Container cont;
             Function  fn;
         };
-	
-	#define PRINTF printf
-	
+        
         size_t AddTest(Test * test)
         {
             tests.push_back(test);
@@ -94,20 +92,31 @@ namespace UnitTests
         }
         
         template<class Container, class Function>
-            size_t AddParamTest(const Container& cont, const Function &fn, const char* name, const char * file, int line)
+        size_t AddParamTest(const Container& cont, const Function &fn, const char* name, const char * file, int line)
         {
             return AddTest(new ParamFunctionTest<Container, Function>(cont, fn, name, file, line));
         }
         
-        template <typename T, size_t N, class Function> 
-            size_t AddParamTest( const T (&data)[ N ], const Function &fn, const char * name, const char * file, int line)
+        template <typename T, size_t N, class Function>
+        size_t AddParamTest( const T (&data)[ N ], const Function &fn, const char * name, const char * file, int line)
         {
-            return AddParamTest(std::vector<T>(data, data + N), fn, name, file, line);	
-        }        
+            return AddParamTest(std::vector<T>(data, data + N), fn, name, file, line);
+        }
         
-        int RunTests(const std::vector<std::string>& )
+        bool IsVerbose(const std::vector<std::string>& args)
         {
-            bool verbose = false;
+            for (auto&& s: args)
+                if (s == "-v" or s == "--verbose")
+                    return true;
+            
+            return false;
+        }
+        
+        #define PRINTF printf
+        
+        int RunTests(const std::vector<std::string>& args)
+        {
+            bool verbose = IsVerbose(args);
             std::vector<std::pair<std::string, std::string> > failures;
             size_t errors = 0;
             size_t num_tests = 0;
@@ -115,12 +124,12 @@ namespace UnitTests
             {
                 for (size_t index = 0; index != test->NumTests(); ++index)
                 {
-					std::string indexs = test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]";
+                    std::string indexs = test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]";
                     std::string name = test->name + indexs;
-					if (verbose)
-					{
-					    PRINTF("Running %s ", name.c_str());
-					}
+                    if (verbose)
+                    {
+                        PRINTF("Running %s ", name.c_str());
+                    }
                     try
                     {
                         ++num_tests;
@@ -145,7 +154,7 @@ namespace UnitTests
             PRINTF("\n");
             if (!failures.empty())
             {
-                PRINTF("Failures :-\n");            
+                PRINTF("Failures :-\n");
                 for (auto&& failure : failures)
                 {
                     PRINTF("%s  while testing TEST(%s)\n", failure.second.c_str(), failure.first.c_str());
@@ -161,51 +170,50 @@ namespace UnitTests
     private:
         std::vector<Test*> tests;
     };
-
-	#define TEST(name) void name();                                                                                             \
-        namespace {                                                                                                             \
-            namespace PP_CAT(unique, __LINE__) {                                                                                \
-                const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddTest(name, #name, __FILE__, __LINE__);   \
-            }                                                                                                                   \
-        }                                                                                                                       \
-        void name()                                                                                                             \
-    /**/    
     
-
-	#define PARAM_TEST(name, data)																					\
-		struct name																									\
-		{																											\
-			template<typename T>																					\
-				void operator()(const T& param, const T& args) const;																\
-		};																											\
-		namespace	{																								\
-			namespace PP_CAT(unique, __LINE__)	{															\
-				const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);				\
-			}																										\
-		}																											\
-		template<typename T> void name::operator()(const T& param, const T& args) const								\
-	/**/        
-
-    #define TEST_MAIN()                                                                                               \
-        UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
-        {                                                                                                             \
-            static UnitTests::MiniSuite runner;                                                                       \
-            return runner;                                                                                            \
-        }                                                                                                             \
-        std::string UnitTests::FormatError(const std::string& file, int line, int error)                              \
-        {                                                                                                             \
-            std::string msg = file;                                                                                   \
-            msg += "(" + std::to_string(line) + ")";                                                                  \
-            msg += " : error A" + std::to_string(error) + ": ";                                                       \
-            return msg;                                                                                               \
-        }                                                                                                             \
-        int main(int argc, char ** argv)                                                                              \
-        {                                                                                                             \
-            std::vector<std::string> args;                                                                            \
-            return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
-        }                                                                                                             \
+#define TEST(name) void name();                                                                                             \
+    namespace {                                                                                                             \
+        namespace PP_CAT(unique, __LINE__) {                                                                                \
+            const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddTest(name, #name, __FILE__, __LINE__);   \
+        }                                                                                                                   \
+    }                                                                                                                       \
+    void name()                                                                                                             \
     /**/
-
+    
+#define PARAM_TEST(name, data)																					\
+    struct name																									\
+    {																											\
+        template<typename T>																					\
+        void operator()(const T& param, const T& args) const;												    \
+    };																											\
+    namespace	{																								\
+        namespace PP_CAT(unique, __LINE__)	{															        \
+            const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);	\
+        }																										\
+    }																											\
+    template<typename T> void name::operator()(const T& param, const T& args) const								\
+    /**/
+    
+#define TEST_MAIN()                                                                                               \
+    UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
+    {                                                                                                             \
+        static UnitTests::MiniSuite runner;                                                                       \
+        return runner;                                                                                            \
+    }                                                                                                             \
+    std::string UnitTests::FormatError(const std::string& file, int line, int error)                              \
+    {                                                                                                             \
+        auto msg = file;                                                                                   \
+        msg += "(" + std::to_string(line) + ")";                                                                  \
+        msg += " : error A" + std::to_string(error) + ": ";                                                       \
+        return msg;                                                                                               \
+    }                                                                                                             \
+    int main(int argc, char ** argv)                                                                              \
+    {                                                                                                             \
+        std::vector<std::string> args(argv, argv + argc);                                                                            \
+        return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
+    }                                                                                                             \
+    /**/
+    
 }
 
 
