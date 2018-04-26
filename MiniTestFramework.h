@@ -8,12 +8,12 @@
 
 namespace UnitTests
 {
-#    define PP_CAT(a, b) PP_CAT_I(a, b)
+#    define PP_CAT(a, b) PP_CAT_AGAIN(a, b)
 #    if !defined(_MSC_VER)
-#       define PP_CAT_I(a, b) a ## b
+#       define PP_CAT_AGAIN(a, b) a ## b
 #   else
-#       define PP_CAT_I(a, b) PP_CAT_II(~, a ## b)
-#       define PP_CAT_II(p, res) res
+#       define PP_CAT_AGAIN(a, b) PP_CAT_AGAIN_II(~, a ## b)
+#       define PP_CAT_AGAIN_II(p, res) res
 #   endif
     
     class MiniSuite
@@ -40,7 +40,7 @@ namespace UnitTests
         public:
             FunctionTest(void (*fn)(), const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
-            fn(fn)
+                    fn(fn)
             {
             }
             
@@ -59,8 +59,8 @@ namespace UnitTests
             
             ParamFunctionTest(const Container& cont, const Function& fn, const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
-            cont(cont),
-            fn(fn)
+                    cont(cont),
+                    fn(fn)
             {
             }
             
@@ -193,6 +193,21 @@ namespace UnitTests
     }																											\
     template<typename T> void name::operator()(const T& param, const T& args) const								\
     /**/
+    
+#define PARAMETERISED_TEST(name, data, a, b)                                                                    \
+    struct name                                                                                                 \
+    {                                                                                                           \
+        template<typename A, typename B>                                                                        \
+        void operator()(const A& a, const B& b) const;                                                          \
+    };                                                                                                          \
+    namespace    {                                                                                              \
+        namespace PP_CAT(unique, __LINE__)    {                                                                 \
+            const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);    \
+        }                                                                                                       \
+    }                                                                                                           \
+    template<typename A, typename B> void name::operator()(const A& a, const B& b)) const                       \
+    /**/
+
     
 #define TEST_MAIN()                                                                                               \
     UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
