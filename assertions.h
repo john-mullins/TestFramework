@@ -129,8 +129,7 @@ namespace UnitTests
     {
         return container<T, N>(a);
     }
-    
-    template <class T, class U> constexpr auto select_args1(const T& a, const U& b)->decltype(true ? a : b) { return true ? a : b; }
+        
     template <class T>
     bool are_equal(const T& lhs, const T& rhs)
     {
@@ -187,15 +186,15 @@ namespace UnitTests
         template<class T, class U>
         void Equals(const std::string& msg, const T& expected, const U& actual) const
         {
-            if (!are_equal(select_args1(expected, actual), select_args1(actual, expected)))
+            if (!are_equal(std::common_type_t<T, U>(expected), std::common_type_t<T, U>(actual)))
             {
                 std::ostringstream s;
                 if (!msg.empty())
                     s << stream(msg) << " ";
                 
                 s << std::boolalpha << "\n";
-                s << "    Expected <" << stream_with_coercion(select_args1(expected, actual), expected) << ">\n";
-                s << "     but got <" << stream_with_coercion(select_args1(actual, expected), actual) << ">\n";
+                s << "    Expected <" << stream_with_coercion(std::common_type_t<T, U>(expected), expected) << ">\n";
+                s << "     but got <" << stream_with_coercion(std::common_type_t<T, U>(actual), actual) << ">\n";
                 s << "  ";
                 Error(s.str());
             }
@@ -215,7 +214,7 @@ namespace UnitTests
         template<class T, class U>
         void NotEquals(const std::string& msg, const T& expected, const U& actual) const
         {
-            if (are_equal(select_args1(expected, actual), select_args1(actual, expected)))
+            if (are_equal(std::common_type_t<T, U>(expected), std::common_type_t<T, U>(actual)))
             {
                 std::ostringstream s;
                 if (!msg.empty())

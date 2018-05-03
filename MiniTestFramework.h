@@ -55,7 +55,7 @@ namespace UnitTests
         class ParamFunctionTest : public Test
         {
         public:
-            typedef typename Container::value_type						param_type;
+            using param_type = typename Container::value_type;
             
             ParamFunctionTest(const Container& cont, const Function& fn, const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
@@ -68,6 +68,7 @@ namespace UnitTests
             {
                 return std::distance(cont.begin(), cont.end());
             }
+            
             
             virtual	void Run(size_t index) const override
             {
@@ -193,21 +194,6 @@ namespace UnitTests
     }																											\
     template<typename T> void name::operator()(const T& param, const T& args) const								\
     /**/
-    
-#define PARAMETERISED_TEST(name, data, a, b)                                                                    \
-    struct name                                                                                                 \
-    {                                                                                                           \
-        template<typename A, typename B>                                                                        \
-        void operator()(const A& a, const B& b) const;                                                          \
-    };                                                                                                          \
-    namespace    {                                                                                              \
-        namespace PP_CAT(unique, __LINE__)    {                                                                 \
-            const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);    \
-        }                                                                                                       \
-    }                                                                                                           \
-    template<typename A, typename B> void name::operator()(const A& a, const B& b)) const                       \
-    /**/
-
     
 #define TEST_MAIN()                                                                                               \
     UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
