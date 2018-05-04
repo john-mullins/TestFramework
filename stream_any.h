@@ -1,6 +1,7 @@
 #if !defined(streamable_h)
 #define streamable_h
 
+#include <iterator>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -10,6 +11,9 @@
 #include <list>
 #include <deque>
 #include "is_streamable.h"
+
+using std::cbegin;
+using std::cend;
 
 namespace UnitTests
 {
@@ -87,43 +91,43 @@ namespace UnitTests
         template<typename Type>
         void output(std::ostream& s, const std::vector<Type>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         template<typename Type>
         void output(std::ostream& s, const std::list<Type>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         template<typename KeyType, typename ValueType>
         void output(std::ostream& s, const std::map<KeyType, ValueType>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         template<typename KeyType, typename ValueType>
         void output(std::ostream& s, const std::multimap<KeyType, ValueType>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         template<typename Type>
         void output(std::ostream& s, const std::set<Type>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         template<typename Type>
         void output(std::ostream& s, const std::multiset<Type>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         template<typename Type>
         void output(std::ostream& s, const std::deque<Type>& c, const std::false_type&)
         {
-            output_range(s, c.begin(), c.end());
+            output_range(s, cbegin(c), cend(c));
         }
         
         // add support for C-arrays,
@@ -131,12 +135,12 @@ namespace UnitTests
         template <typename T, size_t N >
         void output(std::ostream& s,  T (&a)[ N ], const std::true_type&)
         {
-            output_range(s, &a[0], &a[N]);
+            output_range(s, cbeing(a), cend(a));
         }
         template <typename T, size_t N >
         void output(std::ostream& s,  const T (&a)[ N ], const std::true_type&)
         {
-            output_range(s, &a[0], &a[N]);
+            output_range(s, cbegin(a), cend(a));
         }
         
         // the above template was a better match for char arrays (ie strings), so overload it AGAIN!

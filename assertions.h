@@ -5,8 +5,14 @@
 #include "streamfortestoutput.h"
 #include <algorithm>
 #include <functional>
+#include <iterator>
 #include <sstream>
 #include <vector>
+
+using std::begin;
+using std::end;
+using std::cbegin;
+using std::cend;
 
 // use these macros to define your test conditions (they do as they say on the tin) :
 
@@ -106,7 +112,7 @@
 
 namespace UnitTests
 {
-    // this makes an array look like a container, for functions/algorithms that expect an array.
+    // this makes an array look enough like a container for functions/algorithms that expect an array.
     // e.g.
     // std::string bits[] = { "a", "b", "c" };
     // std::string s = join(as_container(bits), "");
@@ -115,15 +121,24 @@ namespace UnitTests
     struct container
     {
         container(T (&a)[ N ]) : begin_(a), end_(a + N) {}
-        typedef typename std::remove_const<T>::type value_type;
+        using value_type = std::remove_const_t<T>;
         typedef const T* const_iterator;
-        const_iterator begin() const    { return begin_;    }
-        const_iterator end() const      { return end_;      }
-        size_t size() const             { return N;         }
-        bool empty() const              { return N == 0;    }
         const_iterator begin_;
         const_iterator end_;
     };
+    
+    template<typename T, size_t N>
+    auto begin(const container<T, N>& container) { return container.begin_;}
+    
+    template<typename T, size_t N>
+    auto cbegin(const  container<T, N>& container) { return container.begin_;}
+    
+    template<typename T, size_t N>
+    auto end(const container<T, N>& container) { return container.end_;}
+    
+    template<typename T, size_t N>
+    auto cend(const container<T, N>& container) { return container.end_;}
+
     template<typename T, size_t N>
     container<T, N> as_container(T (&a)[ N ])
     {
@@ -173,7 +188,7 @@ namespace UnitTests
     public:
         Assert(const char * file, int line)
         :	m_file(file),
-        m_line(line)
+            m_line(line)
         {
         }
         
@@ -247,10 +262,10 @@ namespace UnitTests
         template<typename Value, typename Container>
         void In(const std::string& msg, Value value, Container container) const
         {
-            bool present = std::find(container.begin(), container.end(), value) != container.end();
+            bool present = std::find(cbegin(container), cend(container), value) != cend(container);
             if (!present)
             {
-                ContainmentError(msg, "Expected container to contain", value, container.begin(), container.end());
+                ContainmentError(msg, "Expected container to contain", value, cbegin(container), cend(container));
             }
         }
         
@@ -271,6 +286,7 @@ namespace UnitTests
         {
             In(std::string(), t, container);
         }
+        
         void In(const char* needle, std::string haystack) const { return In(std::string(needle), haystack); }
         
         void In(std::string needle, const char* haystack) const { return In(needle, std::string(haystack)); }
@@ -304,10 +320,10 @@ namespace UnitTests
         template<typename Value, typename Container>
         void NotIn(const std::string& msg, Value value, Container container) const
         {
-            bool present = std::find(container.begin(), container.end(), value) != container.end();
+            bool present = std::find(cbegin(container), cend(container), value) != cend(container);
             if (present)
             {
-                ContainmentError(msg, "Did not expect container to contain", value, container.begin(), container.end());
+                ContainmentError(msg, "Did not expect container to contain", value, cbegin(container), cend(container));
             }
         }
         
@@ -392,7 +408,7 @@ namespace UnitTests
         template<class ExpectedRange, class GotRange>
         void RangeEquals(const std::string& msg, ExpectedRange expected, GotRange got) const
         {
-            RangeEquals(msg, expected.begin(), expected.end(), got.begin(), got.end());
+            RangeEquals(msg, cbegin(expected), cend(expected), cbegin(got), cend(got));
         }
         
         template<class ExpectedRange, class GotRange>
@@ -404,7 +420,7 @@ namespace UnitTests
         template<typename ExpectedValue, size_t ExpectedN, class GotRange>
         void RangeEquals(ExpectedValue (&expected)[ ExpectedN ], GotRange got) const
         {
-            RangeEquals(std::string(), std::vector<ExpectedValue>(expected), got);
+            RangeEquals(std::string(), as_container(expected), got);
         }
         
         template<class ExpectedRange, typename GotValue, size_t GotN>
@@ -449,12 +465,12 @@ namespace UnitTests
         // Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
         void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
         {
-            size_t width = std::max_element(expected.begin(), expected.end(),  [] (const std::string& s1, const std::string& s2) { return s1.size() < s2.size(); } )->size();
+            size_t width = std::max_element(cbegin(expected), cend(expected),  [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); } )->size();
             std::vector<std::string> e, g;
             e.reserve(expected.size());
             g.reserve(got.size());
-            std::transform(expected.begin(), expected.end(), std::back_inserter(e), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
-            std::transform(got.begin(),      got.end(),      std::back_inserter(g), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
+            std::transform(cbegin(expected), cend(expected), std::back_inserter(e), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
+            std::transform(cbegin(got),      cend(got),      std::back_inserter(g), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
             RangeEquals(message, e, g);
         }
 
@@ -541,18 +557,16 @@ namespace UnitTests
         template<class Range>
         std::string join(Range range, const std::string& delim) const
         {
-            return join(range.begin(), range.end(), delim);
+            return join(cbegin(range), cend(range), delim);
         }
         
         template<typename Value, typename ContainerIterator>
         void ContainmentError(const std::string& msg, const std::string& msg2, Value value, ContainerIterator begin, ContainerIterator end) const
         {
             std::ostringstream s;
-            s << stream(msg);
             if (!msg.empty())
-            {
-                s << ". ";
-            }
+                s << stream(msg) << ". ";
+
             s << msg2 << " ";
             s << stream(value);
             s << ", actual contents :\n\t";
