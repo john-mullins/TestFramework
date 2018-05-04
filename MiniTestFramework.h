@@ -106,11 +106,7 @@ namespace UnitTests
         
         bool IsVerbose(const std::vector<std::string>& args)
         {
-            for (auto&& s: args)
-                if (s == "-v" or s == "--verbose")
-                    return true;
-            
-            return false;
+            return std::any_of(begin(args), end(args), [](auto s) {return s == "-v" or s == "--verbose";} );
         }
         
         #define PRINTF printf
