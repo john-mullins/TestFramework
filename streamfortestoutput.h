@@ -6,9 +6,6 @@
 
 namespace UnitTests
 {
-    using true_type = std::integral_constant<bool, true>;
-    using false_type = std::integral_constant<bool, false>;
-    
     inline char escape_it(char c)
     {
         switch (c)
@@ -94,6 +91,7 @@ namespace UnitTests
             add_escapes(c);
             return os << c;
         }
+        
         template<class T, class U>
         struct expected_got_outputter_with_coercion
         {
@@ -103,12 +101,13 @@ namespace UnitTests
         };
         
         template<class T, class U>
-        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, false_type)
+        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, std::false_type)
         { 
             return s << stream(t.t) << " (uncoerced=" << stream(t.u) << ")";
         }
+        
         template<class T, class U>
-        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, true_type)
+        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, std::true_type)
         { 
             return s << stream(t.t);
         }
@@ -116,7 +115,7 @@ namespace UnitTests
         template<class T, class U>
         inline std::ostream& operator<<(std::ostream& os, const expected_got_outputter_with_coercion<T, U> & t)
         {	
-            return streamit(os, t, typename std::is_same<T, U>::type());
+            return streamit(os, t, typename std::is_same<T, U>());
         }
     }
 }

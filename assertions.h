@@ -195,7 +195,7 @@ namespace UnitTests
         template<class T, class U>
         void Equals(const T& expected, const U& actual) const
         {
-            Equals("", expected, actual);
+            Equals(std::string(), expected, actual);
         }
         
         template<class T, class U>
@@ -223,7 +223,7 @@ namespace UnitTests
         template<class T, class U>
         void NotEquals(const T& expected, const U& actual) const
         {
-            NotEquals("", expected, actual);
+            NotEquals(std::string(), expected, actual);
         }
         
         template<class T, class U>
@@ -257,6 +257,13 @@ namespace UnitTests
             {
                 Error(msg + " Expression evaluated to false");
             }
+        }
+        
+        void CreateInError(const char* msg, const std::string& needle, const std::string& haystack) const
+        {
+            std::stringstream s;
+            s << msg << needle << "\" in string \"" << haystack << " ";
+            Error(s.str());
         }
         
         template<typename Value, typename Container>
@@ -293,13 +300,8 @@ namespace UnitTests
         
         void In(std::string needle, std::string haystack) const
         {
-            bool present = haystack.find(needle) != std::string::npos;
-            if (!present)
-            {
-                std::stringstream s;
-                s << "Expected to find \"" << needle << "\" in string \"" << haystack << " ";
-                Error(s.str());
-            }
+            if (haystack.find(needle) == std::string::npos)
+                CreateInError("Expected to find \"", needle, haystack);
         }
         
         void NotIn(const char* needle, std::string haystack) const { return NotIn(std::string(needle), haystack); }
@@ -308,13 +310,8 @@ namespace UnitTests
         
         void NotIn(std::string needle, std::string haystack) const
         {
-            bool present = haystack.find(needle) != std::string::npos;
-            if (present)
-            {
-                std::stringstream s;
-                s << "Did not expect to find \"" << needle << "\" in string \"" << haystack << " ";
-                Error(s.str());
-            }
+            if (haystack.find(needle) == std::string::npos)
+                CreateInError("Did not expect to find \"", needle, haystack);
         }
         
         template<typename Value, typename Container>
@@ -469,8 +466,9 @@ namespace UnitTests
             std::vector<std::string> e, g;
             e.reserve(expected.size());
             g.reserve(got.size());
-            std::transform(cbegin(expected), cend(expected), std::back_inserter(e), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
-            std::transform(cbegin(got),      cend(got),      std::back_inserter(g), [&] (const std::string& s1) {return ljust(s1, width, ' '); });
+            auto adjust = [&] (const std::string& s1) { return ljust(s1, width, ' '); };
+            std::transform(cbegin(expected), cend(expected), std::back_inserter(e), adjust);
+            std::transform(cbegin(got),      cend(got),      std::back_inserter(g), adjust);
             RangeEquals(message, e, g);
         }
 

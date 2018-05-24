@@ -10,7 +10,9 @@
 #include <vector>
 #include <list>
 #include <deque>
+#include <utility>
 #include "is_streamable.h"
+
 
 using std::cbegin;
 using std::cend;
@@ -69,13 +71,44 @@ namespace UnitTests
     
     namespace stream_any_details
     {
-        // pair support.
-        template<typename FirstType, typename SecondType>
-        void output(std::ostream& s, const std::pair<FirstType, SecondType>& pair, const std::false_type&)
+        //  Here we have a pair of functions that implement std::apply
+        //  apply is a C++17 function, these work in C++14
+        template <typename Function, typename Tuple, std::size_t... I>
+        constexpr decltype(auto) apply_impl(Function&& f, Tuple&& t, std::index_sequence<I...>)
         {
-            s << "(" << stream_any(pair.first) << ", " << stream_any(pair.second) << ")";
+            return f(std::get<I>(std::forward<Tuple>(t))...);
         }
         
+        template <typename Function, typename Tuple>
+        constexpr decltype(auto) apply_tuple(Function&& f, Tuple&& t)
+        {
+            return apply_impl(std::forward<Function>(f), std::forward<Tuple>(t),
+                              std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value> {} );
+        }
+        
+        //  Tuple support
+        template <typename Head>
+        void output_tuple(std::ostream& s, const Head& t)
+        {
+            s << stream_any(t);
+        }
+
+        template <typename Head, typename... Tail>
+        void output_tuple(std::ostream& s, const Head& head, Tail... tail)
+        {
+            s << stream_any(head) << ", ";
+            output_tuple(s, std::forward<Tail>(tail)...);
+        }
+
+        template<typename... Ts>
+        void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
+        {
+            s << "(";
+            auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)... ); };
+            apply_tuple(f, tup);
+            s << ")";
+        }
+
         template<typename FwdIt>
         void output_range(std::ostream& s, FwdIt begin, FwdIt end)
         {
@@ -135,8 +168,9 @@ namespace UnitTests
         template <typename T, size_t N >
         void output(std::ostream& s,  T (&a)[ N ], const std::true_type&)
         {
-            output_range(s, cbeing(a), cend(a));
+            output_range(s, cbegin(a), cend(a));
         }
+        
         template <typename T, size_t N >
         void output(std::ostream& s,  const T (&a)[ N ], const std::true_type&)
         {
@@ -154,7 +188,7 @@ namespace UnitTests
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
         {	// this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
-            output(s, t.t, typename is_streamable<T>::type());
+            output(s, t.t, is_streamable<T>());
             return s;
         }
     }
