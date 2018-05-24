@@ -50,16 +50,18 @@ namespace UnitTests
     //			display_streamable(t, img::is_streamable<T>());
     //		}
     //		
-    
-    //  Need this as std::void_t is C++ 17
-    template<typename...>
-    using void_t = void;
+    namespace details
+    {
+        //  Need this as std::void_t is C++ 17
+        template<typename...>
+        using void_t = void;
+    }
     
     template<typename T, typename = void>
     struct is_streamable : std::false_type {};
     
     template<typename T>
-    struct is_streamable<T, void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>> : std::true_type {};
+    struct is_streamable<T, details::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>> : std::true_type {};
 }
 
 #endif
