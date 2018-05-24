@@ -88,20 +88,20 @@ namespace UnitTests
         
         //  Tuple support
         template <typename Head>
-        void output_tuple(std::ostream& s, const Head& t)
+        constexpr void output_tuple(std::ostream& s, const Head& t)
         {
             s << stream_any(t);
         }
 
         template <typename Head, typename... Tail>
-        void output_tuple(std::ostream& s, const Head& head, Tail... tail)
+        constexpr void output_tuple(std::ostream& s, const Head& head, Tail... tail)
         {
             s << stream_any(head) << ", ";
             output_tuple(s, std::forward<Tail>(tail)...);
         }
 
         template<typename... Ts>
-        void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
+        constexpr void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
         {
             s << "(";
             auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)... ); };
