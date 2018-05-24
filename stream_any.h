@@ -99,7 +99,7 @@ namespace UnitTests
             s << stream_any(head) << ", ";
             output_tuple(s, std::forward<Tail>(tail)...);
         }
-
+        
         template<typename... Ts>
         constexpr void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
         {
@@ -107,6 +107,13 @@ namespace UnitTests
             auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)... ); };
             apply_tuple(f, tup);
             s << ")";
+        }
+
+        // Pair support
+        template<typename First, typename Second>
+        constexpr void output(std::ostream& s, const std::pair<First, Second>& tup, const std::false_type&)
+        {
+            s << "(" << stream_any(tup.first) << ", " << stream_any(tup.second) << ")";
         }
 
         template<typename FwdIt>
