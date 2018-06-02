@@ -19,7 +19,7 @@ namespace UnitTests
     //		template<class T>
     //			void display_streamable(const T & t)
     //		{
-    //			if (img::is_streamable<T>::value)
+    //			if (is_streamable<T>::value)
     //			{
     //				std::cout << "Yes";
     //				// std::cout << t;   CAN'T DO THIS.
@@ -47,9 +47,20 @@ namespace UnitTests
     //		template<class T>
     //			void display_streamable(const T & t)
     //		{
-    //			display_streamable(t, img::is_streamable<T>());
+    //			display_streamable(t, is_streamable<T>());
     //		}
-    //		
+    //
+    //      In C++17 we will be able to use constexpr if like this:
+    //
+    //      template<class T>
+    //          void display_streamable(const T& t)
+    //      {
+    //          if constexpr (is_streamable<T>())
+    //              std::cout << t;
+    //          else
+    //              std::cout << "<nonstreamable>";
+    //      }
+    //
     namespace details
     {
         //  Need this as std::void_t is C++ 17

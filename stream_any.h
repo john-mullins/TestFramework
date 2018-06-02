@@ -100,20 +100,26 @@ namespace UnitTests
             output_tuple(s, std::forward<Tail>(tail)...);
         }
         
-        template<typename... Ts>
-        constexpr void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
+        template <template <class ...> class container, typename... Ts>
+        constexpr void output_container(std::ostream& s, const container<Ts...>& tup)
         {
             s << "(";
             auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)... ); };
             apply_tuple(f, tup);
             s << ")";
         }
+        
+        template<typename... Ts>
+        constexpr void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
+        {
+            output_container(s, tup);
+        }
 
         // Pair support
         template<typename First, typename Second>
         constexpr void output(std::ostream& s, const std::pair<First, Second>& tup, const std::false_type&)
         {
-            s << "(" << stream_any(tup.first) << ", " << stream_any(tup.second) << ")";
+            output_container(s, tup);
         }
 
         template<typename FwdIt>
