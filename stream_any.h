@@ -13,7 +13,6 @@
 #include <utility>
 #include "is_streamable.h"
 
-
 using std::cbegin;
 using std::cend;
 
@@ -35,27 +34,38 @@ namespace UnitTests
         {
             s << get_nonstreamable_output();
         }
-        
-        // the default streamer
-        template<class T>
-        static void output(std::ostream& s, const T & t, const std::true_type&)
-        {
-            s << t;
-        }
-        
+
         // unsigned types are much nicer in hex :
         template<class T>
         void output_unsigned(std::ostream& s, const T & t)
         {
             s << std::hex << std::showbase << t << std::noshowbase << std::dec;
         }
+
+        //  signed and unsigned chars are numeric types not characters
+        inline void output(std::ostream& s, unsigned char t, const std::true_type&)
+        {
+            output_unsigned(s, static_cast<unsigned int>(t));
+        }
+
+        inline void output(std::ostream& s, signed char t, const std::true_type&)
+        {
+            s << static_cast<signed int>(t);
+        }
+
         
-        inline void output(std::ostream& s, unsigned char t, const std::true_type&)	    { output_unsigned(s, static_cast<unsigned int>(t));     }
-        inline void output(std::ostream& s, unsigned short t, const std::true_type&)    { output_unsigned(s, t);                                }
-        inline void output(std::ostream& s, unsigned int t, const std::true_type&)      { output_unsigned(s, t);                                }
-        inline void output(std::ostream& s, unsigned long long t, const std::true_type&){ output_unsigned(s, t);                                }
-        
-        // here provide some overloads for some fairly common types that we can introspect, and stream_any a bit deeper.
+        // the default streamer
+        template<class T>
+        static void output(std::ostream& s, const T & t, const std::true_type&)
+        {
+            //  The optimiser will probably throw away the non taken branch
+            //  In C++17 if constexpr would gaurantee it only the taken
+            //  branch is compiled
+            if (std::is_unsigned<T>::value)
+                output_unsigned(s, t);
+            else
+                s << t;
+        }
         
         // the placeholder object, we create one of these with the 'output' function in the parent namespace.
         template<class T>
@@ -71,18 +81,20 @@ namespace UnitTests
     
     namespace stream_any_details
     {
+        // here provide some overloads for some fairly common types that we can introspect, and stream_any a bit deeper.
+        
         //  Here we have a pair of functions that implement std::apply
         //  apply is a C++17 function, these work in C++14
         template <typename Function, typename Tuple, std::size_t... I>
-        constexpr decltype(auto) apply_impl(Function&& f, Tuple&& t, std::index_sequence<I...>)
+        constexpr decltype(auto) apply(Function&& f, Tuple&& t, std::index_sequence<I...>)
         {
             return f(std::get<I>(std::forward<Tuple>(t))...);
         }
         
         template <typename Function, typename Tuple>
-        constexpr decltype(auto) apply_tuple(Function&& f, Tuple&& t)
+        constexpr decltype(auto) apply(Function&& f, Tuple&& t)
         {
-            return apply_impl(std::forward<Function>(f), std::forward<Tuple>(t),
+            return apply(std::forward<Function>(f), std::forward<Tuple>(t),
                               std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value> {} );
         }
         
@@ -100,12 +112,12 @@ namespace UnitTests
             output_tuple(s, std::forward<Tail>(tail)...);
         }
         
-        template <template <class ...> class container, typename... Ts>
-        constexpr void output_container(std::ostream& s, const container<Ts...>& tup)
+        template <template <class ...> class tuple, typename... Ts>
+        constexpr void output_container(std::ostream& s, const tuple<Ts...>& tup)
         {
             s << "(";
             auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)... ); };
-            apply_tuple(f, tup);
+            apply(f, tup);
             s << ")";
         }
         
@@ -132,8 +144,8 @@ namespace UnitTests
             }
             s << "]\n";
         }
-        
-        // containers support.
+
+       // containers support.
         template<typename Type>
         void output(std::ostream& s, const std::vector<Type>& c, const std::false_type&)
         {
