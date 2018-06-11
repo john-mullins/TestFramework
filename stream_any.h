@@ -11,13 +11,77 @@
 #include <list>
 #include <deque>
 #include <utility>
-#include "is_streamable.h"
 
 using std::cbegin;
 using std::cend;
 
 namespace UnitTests
 {
+    // Provides a traits class is_streamable<T> which detects at compile time whether a type has a suitable
+    // overload for std::ostream operator<<(std::ostream&, T);
+    //    Examples :
+    //
+    //        The simplest case, use the ::value :
+    //
+    //        template<class T>
+    //            void display_streamable(const T & t)
+    //        {
+    //            if (is_streamable<T>::value)
+    //            {
+    //                std::cout << "Yes";
+    //                // std::cout << t;   CAN'T DO THIS.
+    //            }
+    //            else
+    //            {
+    //                std::cout << "No";
+    //            }
+    //        }
+    //
+    // The problem with this is that you can't actually call << because it would fail to compile for types that are not, instead use ::type :
+    //
+    //        template<class T>
+    //            void display_streamable(const T& t, std::true_type&)
+    //        {
+    //            std::cout << t;
+    //        }
+    //
+    //        template<class T>
+    //            void display_streamable(const T&, std::false_type_&)
+    //        {
+    //            std::cout << "<nonstreamable>";
+    //        }
+    //
+    //        template<class T>
+    //            void display_streamable(const T & t)
+    //        {
+    //            display_streamable(t, is_streamable<T>());
+    //        }
+    //
+    //      In C++17 we will be able to use constexpr if like this:
+    //
+    //      template<class T>
+    //          void display_streamable(const T& t)
+    //      {
+    //          if constexpr (is_streamable<T>())
+    //              std::cout << t;
+    //          else
+    //              std::cout << "<nonstreamable>";
+    //      }
+    //
+    namespace details
+    {
+        //  Need this as std::void_t is C++ 17
+        template<typename...>
+        using void_t = void;
+    }
+    
+    template<typename T, typename = void>
+    struct is_streamable : std::false_type {};
+    
+    template<typename T>
+    struct is_streamable<T, details::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>> : std::true_type {};
+
+    
     namespace stream_any_details
     {
         // this should really be localised somehow, but this will have to do for now.
@@ -43,7 +107,7 @@ namespace UnitTests
         }
 
         //  signed and unsigned chars are numeric types not characters
-        inline void output(std::ostream& s, unsigned char t, const std::true_type&)
+        inline void output_unsigned(std::ostream& s, unsigned char t)
         {
             output_unsigned(s, static_cast<unsigned int>(t));
         }
@@ -59,7 +123,7 @@ namespace UnitTests
         static void output(std::ostream& s, const T & t, const std::true_type&)
         {
             //  The optimiser will probably throw away the non taken branch
-            //  In C++17 if constexpr would gaurantee it only the taken
+            //  In C++17 if constexpr would gaurantee that only the taken
             //  branch is compiled
             if (std::is_unsigned<T>::value)
                 output_unsigned(s, t);
@@ -219,7 +283,7 @@ namespace UnitTests
     }
     
     // the manipulator creation function - ie the interface to all of the above
-    //   to use :
+    // to use :
     //     std::cout << stream_any(myobject);
     template<class T>
     typename stream_any_details::outputter<T> stream_any(const T& t)
