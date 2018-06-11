@@ -2,6 +2,7 @@
 #define streamable_h
 
 #include <iterator>
+#include <iomanip>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -37,7 +38,7 @@ namespace UnitTests
     //            }
     //        }
     //
-    // The problem with this is that you can't actually call << because it would fail to compile for types that are not, instead use ::type :
+    // The problem with this is that you can't actually call << because it would fail to compile for types that are not, instead use tag dispatch :
     //
     //        template<class T>
     //            void display_streamable(const T& t, std::true_type&)
@@ -81,7 +82,14 @@ namespace UnitTests
     template<typename T>
     struct is_streamable<T, details::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>> : std::true_type {};
 
+    //  If accessible functions cbegin and cend exist which can be called for this type then treat it as
+    //  a container
+    template<typename T, typename = void>
+    struct is_container : std::false_type {};
     
+    template<typename T>
+    struct is_container<T, details::void_t<decltype(cbegin(std::declval<T>()), cend(std::declval<T>()))>> : std::true_type {};
+
     namespace stream_any_details
     {
         // this should really be localised somehow, but this will have to do for now.
@@ -101,15 +109,15 @@ namespace UnitTests
 
         // unsigned types are much nicer in hex :
         template<class T>
-        void output_unsigned(std::ostream& s, const T & t)
+        void output_unsigned(std::ostream& s, const T & t, int width)
         {
-            s << std::hex << std::showbase << t << std::noshowbase << std::dec;
+            s << std::hex << std::showbase << std::setw(2 + width * 2) << std::internal << std::setfill('0') << t << std::noshowbase << std::dec;
         }
 
         //  signed and unsigned chars are numeric types not characters
-        inline void output_unsigned(std::ostream& s, unsigned char t)
+        inline void output_unsigned(std::ostream& s, unsigned char t, int width)
         {
-            output_unsigned(s, static_cast<unsigned int>(t));
+            output_unsigned(s, static_cast<unsigned int>(t), width);
         }
 
         inline void output(std::ostream& s, signed char t, const std::true_type&)
@@ -117,7 +125,6 @@ namespace UnitTests
             s << static_cast<signed int>(t);
         }
 
-        
         // the default streamer
         template<class T>
         static void output(std::ostream& s, const T & t, const std::true_type&)
@@ -126,7 +133,7 @@ namespace UnitTests
             //  In C++17 if constexpr would gaurantee that only the taken
             //  branch is compiled
             if (std::is_unsigned<T>::value)
-                output_unsigned(s, t);
+                output_unsigned(s, t, sizeof(T));
             else
                 s << t;
         }
@@ -208,76 +215,30 @@ namespace UnitTests
             }
             s << "]\n";
         }
+        
+        template<class T>
+        void output_container_or_type(std::ostream& s, const T & t, const std::false_type&)
+        {
+            output(s, t, is_streamable<T>());
+        }
+        
+        template<class T>
+        void output_container_or_type(std::ostream& s, const T & t, const std::true_type&)
+        {
+            output_range(s, cbegin(t), cend(t));
+        }
 
-       // containers support.
-        template<typename Type>
-        void output(std::ostream& s, const std::vector<Type>& c, const std::false_type&)
+        void output_container_or_type(std::ostream& s, const std::string& t, const std::true_type&)
         {
-            output_range(s, cbegin(c), cend(c));
+            output(s, t, std::true_type());
         }
-        
-        template<typename Type>
-        void output(std::ostream& s, const std::list<Type>& c, const std::false_type&)
-        {
-            output_range(s, cbegin(c), cend(c));
-        }
-        
-        template<typename KeyType, typename ValueType>
-        void output(std::ostream& s, const std::map<KeyType, ValueType>& c, const std::false_type&)
-        {
-            output_range(s, cbegin(c), cend(c));
-        }
-        
-        template<typename KeyType, typename ValueType>
-        void output(std::ostream& s, const std::multimap<KeyType, ValueType>& c, const std::false_type&)
-        {
-            output_range(s, cbegin(c), cend(c));
-        }
-        
-        template<typename Type>
-        void output(std::ostream& s, const std::set<Type>& c, const std::false_type&)
-        {
-            output_range(s, cbegin(c), cend(c));
-        }
-        
-        template<typename Type>
-        void output(std::ostream& s, const std::multiset<Type>& c, const std::false_type&)
-        {
-            output_range(s, cbegin(c), cend(c));
-        }
-        
-        template<typename Type>
-        void output(std::ostream& s, const std::deque<Type>& c, const std::false_type&)
-        {
-            output_range(s, cbegin(c), cend(c));
-        }
-        
-        // add support for C-arrays,
-        // (note that is_streamable returns true, because there is a valid conversion from array to pointer type)
-        template <typename T, size_t N >
-        void output(std::ostream& s,  T (&a)[ N ], const std::true_type&)
-        {
-            output_range(s, cbegin(a), cend(a));
-        }
-        
-        template <typename T, size_t N >
-        void output(std::ostream& s,  const T (&a)[ N ], const std::true_type&)
-        {
-            output_range(s, cbegin(a), cend(a));
-        }
-        
-        // the above template was a better match for char arrays (ie strings), so overload it AGAIN!
-        template <size_t N >
-        void output(std::ostream& s,  const char (&str)[ N ], const std::true_type&)
-        {
-            s << str;
-        }
-        
+
         template<class T>
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
         {	// this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
-            output(s, t.t, is_streamable<T>());
+            //output(s, t.t, is_streamable<T>());
+            output_container_or_type(s, t.t, is_container<T>());
             return s;
         }
     }
