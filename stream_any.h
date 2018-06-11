@@ -6,15 +6,10 @@
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <map>
-#include <set>
-#include <vector>
-#include <list>
-#include <deque>
 #include <utility>
 
-using std::cbegin;
-using std::cend;
+using std::begin;
+using std::end;
 
 namespace UnitTests
 {
@@ -82,14 +77,14 @@ namespace UnitTests
     template<typename T>
     struct is_streamable<T, details::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>> : std::true_type {};
 
-    //  If accessible functions cbegin and cend exist which can be called for this type then treat it as
+    //  If accessible functions begin and end exist which can be called for this type then treat it as
     //  a container
     template<typename T, typename = void>
-    struct is_container : std::false_type {};
+    struct is_container : std::is_array<T> {};
     
     template<typename T>
-    struct is_container<T, details::void_t<decltype(cbegin(std::declval<T>()), cend(std::declval<T>()))>> : std::true_type {};
-
+    struct is_container<T, details::void_t<decltype(begin(std::declval<T>()), end(std::declval<T>()))>> : std::true_type {};
+    
     namespace stream_any_details
     {
         // this should really be localised somehow, but this will have to do for now.
@@ -109,7 +104,7 @@ namespace UnitTests
 
         // unsigned types are much nicer in hex :
         template<class T>
-        void output_unsigned(std::ostream& s, const T & t, int width)
+        void output_unsigned(std::ostream& s, const T& t, int width)
         {
             s << std::hex << std::showbase << std::setw(2 + width * 2) << std::internal << std::setfill('0') << t << std::noshowbase << std::dec;
         }
@@ -127,7 +122,7 @@ namespace UnitTests
 
         // the default streamer
         template<class T>
-        static void output(std::ostream& s, const T & t, const std::true_type&)
+        static void output(std::ostream& s, const T& t, const std::true_type&)
         {
             //  The optimiser will probably throw away the non taken branch
             //  In C++17 if constexpr would gaurantee that only the taken
@@ -205,40 +200,38 @@ namespace UnitTests
             output_container(s, tup);
         }
 
-        template<typename FwdIt>
-        void output_range(std::ostream& s, FwdIt begin, FwdIt end)
-        {
-            s << "[\n";
-            for (; begin != end; ++begin)
-            {
-                s << "  " << stream_any(*begin) << ",\n";
-            }
-            s << "]\n";
-        }
-        
         template<class T>
-        void output_container_or_type(std::ostream& s, const T & t, const std::false_type&)
+        void output_range_or_type(std::ostream& s, const T& t, const std::false_type&)
         {
             output(s, t, is_streamable<T>());
         }
         
         template<class T>
-        void output_container_or_type(std::ostream& s, const T & t, const std::true_type&)
+        void output_range_or_type(std::ostream& s, const T& t, const std::true_type&)
         {
-            output_range(s, cbegin(t), cend(t));
+            s << "[\n";
+            for (auto&& value : t)
+                s << "  " << stream_any(value) << ",\n";
+            s << "]\n";
         }
 
-        void output_container_or_type(std::ostream& s, const std::string& t, const std::true_type&)
+        //  We do not want these to go down the container type route just displays as strings
+        template <size_t N>
+        void output_range_or_type(std::ostream& s, const char(&t)[N], const std::true_type&)
         {
             output(s, t, std::true_type());
         }
 
+        void output_range_or_type(std::ostream& s, const std::string& t, const std::true_type&)
+        {
+            output(s, t, std::true_type());
+        }
+        
         template<class T>
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
         {	// this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
-            //output(s, t.t, is_streamable<T>());
-            output_container_or_type(s, t.t, is_container<T>());
+            output_range_or_type(s, t.t, is_container<T>());
             return s;
         }
     }
