@@ -4,6 +4,7 @@
 #include "assertions.h"
 #include "testfailure.h"
 #include "TestHelpers.h"
+#include <memory>
 #include <vector>
 
 namespace UnitTests
@@ -28,7 +29,7 @@ namespace UnitTests
             
             virtual void Run(size_t) const = 0;
             virtual size_t NumTests() const = 0;
-            virtual ~Test() {}
+            virtual ~Test() = default;
             
             std::string     name;
             const char *    file;
@@ -69,7 +70,6 @@ namespace UnitTests
                 return std::distance(cont.begin(), cont.end());
             }
             
-            
             virtual	void Run(size_t index) const override
             {
                 auto&& args = *(cont.begin() + index);
@@ -81,21 +81,23 @@ namespace UnitTests
             Function  fn;
         };
         
-        size_t AddTest(Test * test)
+        size_t AddTest(std::unique_ptr<Test> test)
         {
-            tests.push_back(test);
+            tests.push_back(std::move(test));
             return 0;
         }
         
         size_t AddTest(void (*fn)(), const std::string& name, const char * file, int line)
         {
-            return AddTest(new FunctionTest(fn, name, file, line));
+            auto test = std::unique_ptr<Test>(std::make_unique<FunctionTest>(fn, name, file, line));
+            return AddTest(std::move(test));
         }
         
         template<class Container, class Function>
         size_t AddParamTest(const Container& cont, const Function &fn, const char* name, const char * file, int line)
         {
-            return AddTest(new ParamFunctionTest<Container, Function>(cont, fn, name, file, line));
+            auto test = std::unique_ptr<Test>(std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
+            return AddTest(std::move(test));
         }
         
         template <typename T, size_t N, class Function>
@@ -145,8 +147,6 @@ namespace UnitTests
                         ++errors;
                     }
                 }
-                delete test;
-                test = nullptr;
             }
             PRINTF("\n");
             if (!failures.empty())
@@ -165,7 +165,7 @@ namespace UnitTests
         }
         
     private:
-        std::vector<Test*> tests;
+        std::vector<std::unique_ptr<Test>> tests;
     };
     
 #define TEST(name) void name();                                                                                             \
@@ -199,14 +199,14 @@ namespace UnitTests
     }                                                                                                             \
     std::string UnitTests::FormatError(const std::string& file, int line, int error)                              \
     {                                                                                                             \
-        auto msg = file;                                                                                   \
+        auto msg = file;                                                                                          \
         msg += "(" + std::to_string(line) + ")";                                                                  \
         msg += " : error A" + std::to_string(error) + ": ";                                                       \
         return msg;                                                                                               \
     }                                                                                                             \
     int main(int argc, char ** argv)                                                                              \
     {                                                                                                             \
-        std::vector<std::string> args(argv, argv + argc);                                                                            \
+        std::vector<std::string> args(argv, argv + argc);                                                         \
         return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
     }                                                                                                             \
     /**/
