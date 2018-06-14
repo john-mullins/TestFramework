@@ -25,27 +25,17 @@ namespace UnitTests
     {
     public:
         TestFailure(const std::string& msg, const std::string& file, int line)
-        :	m_what(FormatError(file, line, AssertionFailure) + "Assertion failure : " + msg),
+        :   m_what(FormatError(file, line, AssertionFailure) + "Assertion failure : " + msg),
             m_msg(msg)
         {
         }
         
-        const char* what() const throw() { return m_what.c_str(); }
+        const char* what() const noexcept { return m_what.c_str(); }
         
         // get the failure message WITHOUT the file and line number bit
         std::string msg() const { return m_msg; }
         
-        void AddStackTrace(const char * file, const char * function, int line)
-        {
-            m_what = what();
-            m_what += "\n\t";
-            m_what += file;
-            m_what += "(" + std::to_string(line) + ") : called from ";
-            m_what += (function[0] != 0 ? function : "(unknown)");
-            m_what += ".";
-        }
-        
-        ~TestFailure() throw() {}
+        ~TestFailure() noexcept {}
     private:
         std::string	m_what;
         std::string m_msg;
@@ -60,12 +50,12 @@ namespace UnitTests
         {
         }
         
-        const char* what() const throw() { return m_what.c_str(); }
+        const char* what() const noexcept { return m_what.c_str(); }
         
         // get the failure message WITHOUT the file and line number bit
         std::string msg() const { return m_msg; }
         
-        ~TestTimeout() throw() {}
+        ~TestTimeout() noexcept {}
     private:
         std::string	m_what;
         std::string m_msg;
