@@ -115,16 +115,16 @@ namespace UnitTests
         
         int RunTests(const std::vector<std::string>& args)
         {
-            bool verbose = IsVerbose(args);
-            std::vector<std::pair<std::string, std::string> > failures;
-            size_t errors = 0;
-            size_t num_tests = 0;
+            auto verbose = IsVerbose(args);
+            auto failures = std::vector<std::pair<std::string, std::string>>{};
+            auto errors = 0U;
+            auto num_tests = 0U;
             for (auto&& test : tests)
             {
                 for (size_t index = 0; index != test->NumTests(); ++index)
                 {
-                    std::string indexs = test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]";
-                    std::string name = test->name + indexs;
+                    auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
+                    auto name = test->name + indexs;
                     if (verbose)
                     {
                         PRINTF("Running %s ", name.c_str());
@@ -206,7 +206,7 @@ namespace UnitTests
     }                                                                                                             \
     int main(int argc, char ** argv)                                                                              \
     {                                                                                                             \
-        std::vector<std::string> args(argv, argv + argc);                                                         \
+        auto args = std::vector<std::string>(argv, argv + argc);                                                  \
         return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
     }                                                                                                             \
     /**/

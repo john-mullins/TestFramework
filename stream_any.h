@@ -16,7 +16,7 @@ namespace UnitTests
     //
     //        The simplest case, use the ::value :
     //
-    //        template<class T>
+    //        template<typename T>
     //            void display_streamable(const T & t)
     //        {
     //            if (is_streamable<T>::value)
@@ -33,19 +33,19 @@ namespace UnitTests
     // The problem with this is that you can't actually call << because it would fail to compile for types that are not, instead
     // use tag dispatch :
     //
-    //        template<class T>
+    //        template<tyepname T>
     //            void display_streamable(const T& t, std::true_type&)
     //        {
     //            std::cout << t;
     //        }
     //
-    //        template<class T>
+    //        template<typename T>
     //            void display_streamable(const T&, std::false_type_&)
     //        {
     //            std::cout << "<nonstreamable>";
     //        }
     //
-    //        template<class T>
+    //        template<typename T>
     //            void display_streamable(const T & t)
     //        {
     //            display_streamable(t, is_streamable<T>());
@@ -53,7 +53,7 @@ namespace UnitTests
     //
     //      In C++17 we will be able to use constexpr if like this:
     //
-    //      template<class T>
+    //      template<typename T>
     //          void display_streamable(const T& t)
     //      {
     //          if constexpr (is_streamable<T>())
@@ -85,7 +85,7 @@ namespace UnitTests
     
     template<typename T>
     struct is_container<T, details::void_t<decltype(begin(std::declval<T>()), end(std::declval<T>()))>> : std::true_type {};
-
+ 
     namespace stream_any_details
     {
         // this should really be localised somehow, but this will have to do for now.
@@ -104,10 +104,10 @@ namespace UnitTests
         }
 
         // unsigned types are much nicer in hex :
-        template<class T>
+        template<typename T>
         void output_unsigned(std::ostream& s, const T& t, int width)
         {
-            s << std::hex << std::showbase << std::setw(2 + width * 2) << std::internal << std::setfill('0') << t <<
+            s << std::hex << std::showbase << std::setw(2 + width) << std::internal << std::setfill('0') << t <<
                 std::noshowbase << std::dec;
         }
 
@@ -123,20 +123,20 @@ namespace UnitTests
         }
 
         // the default streamer
-        template<class T>
+        template<typename T>
         static void output(std::ostream& s, const T& t, const std::true_type&)
         {
             //  The optimiser will probably throw away the non taken branch
             //  In C++17 if constexpr would gaurantee that only the taken
             //  branch is compiled
             if (std::is_unsigned<T>::value)
-                output_unsigned(s, t, sizeof t);
+                output_unsigned(s, t, 2 * sizeof t);
             else
                 s << t;
         }
         
         // the placeholder object, we create one of these with the 'output' function in the parent namespace.
-        template<class T>
+        template<typename T>
         struct outputter
         {
             outputter(const T& t) : t(t) {}
@@ -144,7 +144,7 @@ namespace UnitTests
         };
     }
     
-    template<class T>
+    template<typename T>
     typename stream_any_details::outputter<T> stream_any(const T& t);
     
     namespace stream_any_details
@@ -180,7 +180,7 @@ namespace UnitTests
             output_tuple(s, std::forward<Tail>(tail)...);
         }
         
-        template <template <class ...> class tuple, typename... Ts>
+        template <template <typename ...> typename tuple, typename... Ts>
         void output_container(std::ostream& s, const tuple<Ts...>& tup)
         {
             s << "(";
@@ -202,13 +202,13 @@ namespace UnitTests
             output_container(s, tup);
         }
 
-        template<class T>
+        template<typename T>
         void output_range_or_type(std::ostream& s, const T& t, const std::false_type&)
         {
             output(s, t, is_streamable<T>{});
         }
         
-        template<class T>
+        template<typename T>
         void output_range_or_type(std::ostream& s, const T& t, const std::true_type&)
         {
             s << "[\n";
@@ -229,7 +229,7 @@ namespace UnitTests
             output(s, t, std::true_type{});
         }
         
-        template<class T>
+        template<typename T>
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
         {	// this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
@@ -241,14 +241,14 @@ namespace UnitTests
     // the manipulator creation function - ie the interface to all of the above
     // to use :
     //     std::cout << stream_any(myobject);
-    template<class T>
+    template<typename T>
     typename stream_any_details::outputter<T> stream_any(const T& t)
     {
         return stream_any_details::outputter<T>{t};
     }
     
     // a useful helper function, a bit like lexical cast, but it will only convert to string, not to other types.
-    template<class T>
+    template<typename T>
     std::string any_to_string(const T& t)
     {
         std::ostringstream os;

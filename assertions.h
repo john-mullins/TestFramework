@@ -167,7 +167,7 @@ namespace UnitTests
     template<class It1, class It2>
     void OutputRange(std::ostream& os, It1 first1, It1 last1, It2 first2, It2 last2, It1 point_out)
     {
-        size_t n = 0;
+        auto n = 0U;
         while (first1 != last1 || first2 != last2)
         {
             if (n != 0)
@@ -175,7 +175,7 @@ namespace UnitTests
                 os << "\n";
             }
             os << "\telement[" << n++ << "] = (";
-            bool point_out_this_line = first1 == point_out;
+            auto point_out_this_line = first1 == point_out;
             first1 = OutputElement(os, first1, last1);
             os << ",";
             first2 = OutputElement(os, first2, last2);
@@ -203,7 +203,7 @@ namespace UnitTests
         {
             if (!are_equal(std::common_type_t<T, U>(expected), std::common_type_t<T, U>(actual)))
             {
-                std::ostringstream s;
+                auto s = std::ostringstream{};
                 if (!msg.empty())
                     s << stream(msg) << " ";
                 
@@ -231,7 +231,7 @@ namespace UnitTests
         {
             if (are_equal(std::common_type_t<T, U>(expected), std::common_type_t<T, U>(actual)))
             {
-                std::ostringstream s;
+                auto s = std::ostringstream{};
                 if (!msg.empty())
                     s << stream(msg) << " ";
                 
@@ -261,7 +261,7 @@ namespace UnitTests
         
         void CreateInError(const char* msg, const std::string& needle, const std::string& haystack) const
         {
-            std::stringstream s;
+            auto s = std::stringstream{};
             s << msg << needle << "\" in string \"" << haystack << " ";
             Error(s.str());
         }
@@ -269,7 +269,7 @@ namespace UnitTests
         template<typename Value, typename Container>
         void In(const std::string& msg, Value value, Container container) const
         {
-            bool present = std::find(cbegin(container), cend(container), value) != cend(container);
+            auto present = std::find(cbegin(container), cend(container), value) != cend(container);
             if (!present)
             {
                 ContainmentError(msg, "Expected container to contain", value, cbegin(container), cend(container));
@@ -317,7 +317,7 @@ namespace UnitTests
         template<typename Value, typename Container>
         void NotIn(const std::string& msg, Value value, Container container) const
         {
-            bool present = std::find(cbegin(container), cend(container), value) != cend(container);
+            auto present = std::find(cbegin(container), cend(container), value) != cend(container);
             if (present)
             {
                 ContainmentError(msg, "Did not expect container to contain", value, cbegin(container), cend(container));
@@ -382,14 +382,14 @@ namespace UnitTests
         template<class ExpectedIt, class GotIterator>
         void RangeEquals(const std::string& msg, ExpectedIt expected_first, ExpectedIt expected_last, GotIterator got_first, GotIterator got_last) const
         {
-            ptrdiff_t expected_len = std::distance(expected_first, expected_last);
-            ptrdiff_t got_len = std::distance(got_first, got_last);
+            auto expected_len = std::distance(expected_first, expected_last);
+            auto got_len = std::distance(got_first, got_last);
             if (expected_len != got_len)
             {
                 RangeError(msg, " length", expected_first, expected_last, got_first, got_last, expected_last, expected_len, got_len);
             }
             
-            ExpectedIt dif = std::mismatch(expected_first, expected_last, got_first).first;
+            auto dif = std::mismatch(expected_first, expected_last, got_first).first;
             if (dif != expected_last)
             {
                 RangeError(msg, "", expected_first, expected_last, got_first, got_last, dif, expected_len, got_len);
@@ -462,8 +462,9 @@ namespace UnitTests
         // Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
         void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
         {
-            size_t width = std::max_element(cbegin(expected), cend(expected),  [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); } )->size();
-            std::vector<std::string> e, g;
+            auto width = std::max_element(cbegin(expected), cend(expected),  [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); } )->size();
+            auto e = std::vector<std::string>{};
+            auto g = std::vector<std::string>{};
             e.reserve(expected.size());
             g.reserve(got.size());
             auto adjust = [&] (const std::string& s1) { return ljust(s1, width, ' '); };
@@ -515,7 +516,7 @@ namespace UnitTests
         
         inline std::vector<std::string> split(const std::string& s, const char* delims = " \t\r\n\v" )
         {
-            std::vector<std::string> results;
+            auto results = std::vector<std::string>{};
             
             auto start = s.find_first_not_of(delims);
             
@@ -523,7 +524,7 @@ namespace UnitTests
             {
                 auto end = s.find_first_of(delims, start);
                 if (end != start)
-                    results.emplace_back(s, start, end == std::string::npos ? std::string::npos : end - start);
+                    results.emplace_back(s.c_str() + start, end == std::string::npos ? std::string::npos : end - start);
                 
                 start = s.find_first_not_of(delims, end);
             }
@@ -547,7 +548,7 @@ namespace UnitTests
         template<class FwdIt>
         std::string join(FwdIt begin, FwdIt end, const std::string& delim) const
         {
-            std::ostringstream	stream;
+            auto stream = std::ostringstream{};
             join(begin, end, delim, stream);
             return stream.str();
         }
@@ -561,7 +562,7 @@ namespace UnitTests
         template<typename Value, typename ContainerIterator>
         void ContainmentError(const std::string& msg, const std::string& msg2, Value value, ContainerIterator begin, ContainerIterator end) const
         {
-            std::ostringstream s;
+            auto s = std::ostringstream{};
             if (!msg.empty())
                 s << stream(msg) << ". ";
 
@@ -578,7 +579,7 @@ namespace UnitTests
                         ExpectedIt expected_first, ExpectedIt expected_last, GotIterator got_first, GotIterator got_last,
                         ExpectedIt indicate, ptrdiff_t expected_len, ptrdiff_t got_len) const
         {
-            std::ostringstream s;
+            auto s = std::ostringstream{};
             if (!msg.empty())
             {
                 s << stream(msg) << " ";

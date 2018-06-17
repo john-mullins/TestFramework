@@ -87,7 +87,7 @@ namespace UnitTests
         
         inline std::ostream& operator<<(std::ostream& os, const expected_got_outputter<std::string> & t)
         {	
-            std::string c = t.t;
+            auto c = t.t;
             add_escapes(c);
             return os << c;
         }
