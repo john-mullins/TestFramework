@@ -180,7 +180,7 @@ namespace UnitTests
             output_tuple(s, std::forward<Tail>(tail)...);
         }
         
-        template <template <typename ...> typename tuple, typename... Ts>
+        template <template <typename ...> class tuple, typename... Ts>
         void output_container(std::ostream& s, const tuple<Ts...>& tup)
         {
             s << "(";
