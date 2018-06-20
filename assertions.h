@@ -121,23 +121,12 @@ namespace UnitTests
     struct container
     {
         container(T (&a)[ N ]) : begin_(a), end_(a + N) {}
-        using value_type = std::remove_const_t<T>;
         typedef const T* const_iterator;
+        auto begin() const { return begin_; }
+        auto end() const { return end_; }
         const_iterator begin_;
         const_iterator end_;
     };
-    
-    template<typename T, size_t N>
-    auto begin(const container<T, N>& container) { return container.begin_;}
-    
-    template<typename T, size_t N>
-    auto cbegin(const  container<T, N>& container) { return container.begin_;}
-    
-    template<typename T, size_t N>
-    auto end(const container<T, N>& container) { return container.end_;}
-    
-    template<typename T, size_t N>
-    auto cend(const container<T, N>& container) { return container.end_;}
 
     template<typename T, size_t N>
     container<T, N> as_container(T (&a)[ N ])
