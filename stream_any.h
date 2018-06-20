@@ -67,25 +67,35 @@ namespace UnitTests
         //  Need this as std::void_t is C++ 17
         template<typename...>
         using void_t = void;
+
+        template <typename void_type, template<typename...> class op, typename... args>
+        struct detector : std::false_type {};
+        
+        template <template<typename...> class op, typename... args>
+        struct detector<void_t<op<args...>>, op, args...> : std::true_type {};
+        
+        template <template<typename...> class op, typename... args>
+        using is_well_formed = details::detector<void, op, args...>;
     }
     
-    template<typename T, typename = void>
-    struct is_streamable : std::false_type {};
-    
-    template<typename T>
-    struct is_streamable<T, details::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>> : std::true_type {};
+    template <typename T>
+    using stream_it = decltype(std::declval<std::ostream&>() << std::declval<T>());
 
+    template<typename T>
+    using is_streamable = details::is_well_formed<stream_it, T>;
+    
     //  If accessible functions begin and end exist which can be called for this type or it is an array then treat it as
     //  a container
-    template<typename T, typename = void>
-    struct is_container : std::is_array<T> {};
-    
+
     using std::begin;
     using std::end;
+
+    template <typename T>
+    using iterate_it = decltype(begin(std::declval<T&>()), end(std::declval<T&>()));
+
+    template <typename T>
+    using is_range = details::is_well_formed<iterate_it, T>;
     
-    template<typename T>
-    struct is_container<T, details::void_t<decltype(begin(std::declval<T>()), end(std::declval<T>()))>> : std::true_type {};
- 
     namespace stream_any_details
     {
         // this should really be localised somehow, but this will have to do for now.
@@ -149,6 +159,7 @@ namespace UnitTests
     
     namespace stream_any_details
     {
+
         // here provide some overloads for some fairly common types that we can introspect, and stream_any a bit deeper.
         
         //  Here we have a pair of functions that implement std::apply
@@ -233,7 +244,7 @@ namespace UnitTests
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
         {	// this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
-            output_range_or_type(s, t.t, is_container<T>{});
+            output_range_or_type(s, t.t, is_range<T>{});
             return s;
         }
     }
