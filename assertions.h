@@ -247,7 +247,9 @@ namespace UnitTests
         }
         
         void In(const char* needle, std::string haystack) const { return In(std::string(needle), haystack); }
-        
+
+        void In(const char* needle, const char* haystack) const { return In(std::string(needle), std::string(haystack)); }
+
         void In(std::string needle, const char* haystack) const { return In(needle, std::string(haystack)); }
         
         void In(std::string needle, std::string haystack) const
@@ -259,10 +261,12 @@ namespace UnitTests
         void NotIn(const char* needle, std::string haystack) const { return NotIn(std::string(needle), haystack); }
         
         void NotIn(std::string needle, const char* haystack) const { return NotIn(needle, std::string(haystack)); }
-        
+
+        void NotIn(const char* needle, const char* haystack) const { return NotIn(std::string(needle), std::string(haystack)); }
+
         void NotIn(std::string needle, std::string haystack) const
         {
-            if (haystack.find(needle) == std::string::npos)
+            if (haystack.find(needle) != std::string::npos)
                 CreateInError("Did not expect to find \"", needle, haystack);
         }
         
