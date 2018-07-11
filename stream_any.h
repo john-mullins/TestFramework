@@ -19,7 +19,7 @@ namespace UnitTests
     //        template<typename T>
     //            void display_streamable(const T & t)
     //        {
-    //            if (is_streamable<T>::value)
+    //            if constexpr (is_streamable<T>::value)
     //            {
     //                std::cout << "Yes";
     //                // std::cout << t;   CAN'T DO THIS.
@@ -165,7 +165,7 @@ namespace UnitTests
         //  Here we have a pair of functions that implement std::apply
         //  apply is a C++17 function, these work in C++14
         template <typename Function, typename Tuple, std::size_t... I>
-        constexpr decltype(auto) apply(Function&& f, Tuple&& t, std::index_sequence<I...>)
+        constexpr decltype(auto) apply_impl(Function&& f, Tuple&& t, std::index_sequence<I...>)
         {
             return f(std::get<I>(std::forward<Tuple>(t))...);
         }
@@ -173,7 +173,7 @@ namespace UnitTests
         template <typename Function, typename Tuple>
         constexpr decltype(auto) apply(Function&& f, Tuple&& t)
         {
-            return apply(std::forward<Function>(f), std::forward<Tuple>(t),
+            return apply_impl(std::forward<Function>(f), std::forward<Tuple>(t),
                               std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value> {} );
         }
         
