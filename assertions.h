@@ -23,8 +23,6 @@ using std::cend;
 #define ASSERT_IN                   UnitTests::Assert(__FILE__, __LINE__).In
 #define ASSERT_NOT_IN               UnitTests::Assert(__FILE__, __LINE__).NotIn
 #define FAIL                        UnitTests::Assert(__FILE__, __LINE__).Fail
-//#define ASSERT_FILES_EQUAL            UnitTests::Assert(__FILE__, __LINE__).FilesEqual
-//#define ASSERT_LARGE_STRING_EQUALS    UnitTests::Assert(__FILE__, __LINE__).LargeStringEquals
 #define ASSERT_RANGE_EQUALS         UnitTests::Assert(__FILE__, __LINE__).RangeEquals
 
 // Note this isn't a very good implementation of this because it ignores trailing whitespace on newlines, but it is a start.
@@ -112,28 +110,6 @@ using std::cend;
 
 namespace UnitTests
 {
-    // this makes an array look enough like a container for functions/algorithms that expect an array.
-    // e.g.
-    // std::string bits[] = { "a", "b", "c" };
-    // std::string s = join(as_container(bits), "");
-    // ASSERT_EQUALS("abc", s);
-    template<typename T, size_t N>
-    struct container
-    {
-        container(T (&a)[ N ]) : begin_(a), end_(a + N) {}
-        typedef const T* const_iterator;
-        auto begin() const { return begin_; }
-        auto end() const { return end_; }
-        const_iterator begin_;
-        const_iterator end_;
-    };
-
-    template<typename T, size_t N>
-    container<T, N> as_container(T (&a)[ N ])
-    {
-        return container<T, N>(a);
-    }
-        
     template <class T>
     bool are_equal(const T& lhs, const T& rhs)
     {
@@ -256,31 +232,18 @@ namespace UnitTests
         }
         
         template<typename Value, typename Container>
-        void In(const std::string& msg, Value value, Container container) const
+        void In(const std::string& msg, Value value, Container&& container) const
         {
-            auto present = std::find(cbegin(container), cend(container), value) != cend(container);
-            if (!present)
+            if (std::find(cbegin(container), cend(container), value) == cend(container))
             {
                 ContainmentError(msg, "Expected container to contain", value, cbegin(container), cend(container));
             }
         }
         
-        template<typename Value, typename ContainerValue, size_t ContainerN>
-        void In(const std::string& msg, Value value, ContainerValue (&container)[ ContainerN]) const
-        {
-            In(msg, value, as_container(container));
-        }
-        
-        template<typename Value, typename ContainerValue, size_t ContainerN>
-        void In(Value value, ContainerValue (&container)[ ContainerN]) const
-        {
-            In(std::string(), value, as_container(container));
-        }
-        
         template<typename T, typename Container>
-        void In(T t, Container container) const
+        void In(T t, Container&& container) const
         {
-            In(std::string(), t, container);
+            In(std::string(), t, std::forward<Container>(container));
         }
         
         void In(const char* needle, std::string haystack) const { return In(std::string(needle), haystack); }
@@ -304,31 +267,18 @@ namespace UnitTests
         }
         
         template<typename Value, typename Container>
-        void NotIn(const std::string& msg, Value value, Container container) const
+        void NotIn(const std::string& msg, Value value, Container&& container) const
         {
-            auto present = std::find(cbegin(container), cend(container), value) != cend(container);
-            if (present)
+            if (std::find(cbegin(container), cend(container), value) != cend(container))
             {
                 ContainmentError(msg, "Did not expect container to contain", value, cbegin(container), cend(container));
             }
         }
         
-        template<typename Value, typename ContainerValue, size_t ContainerN>
-        void NotIn(const std::string& msg, Value value, ContainerValue (&container)[ ContainerN]) const
-        {
-            NotIn(msg, value, as_container(container));
-        }
-        
-        template<typename Value, typename ContainerValue, size_t ContainerN>
-        void NotIn(Value value, ContainerValue (&container)[ ContainerN]) const
-        {
-            NotIn(std::string(), value, as_container(container));
-        }
-        
         template<typename T, typename Container>
-        void NotIn(T t, Container container) const
+        void NotIn(T t, Container&& container) const
         {
-            NotIn(std::string(), t, container);
+            NotIn(std::string(), t, std::forward<Container>(container));
         }
         
         void False(bool expr) const
@@ -352,13 +302,6 @@ namespace UnitTests
         void Fail(const std::string& msg) const
         {
             Error(msg);
-        }
-        
-        void FilesEqual(const std::string& msg, const std::string& expected_filename, const std::string& actual_filename);
-        
-        void FilesEqual(const std::string& expected_filename, const std::string& actual_filename)
-        {
-            FilesEqual(std::string(), expected_filename, actual_filename);
         }
         
         void LargeStringEquals(const std::string& msg, const std::string& expected, const std::string& actual);
@@ -392,53 +335,17 @@ namespace UnitTests
         }
         
         template<class ExpectedRange, class GotRange>
-        void RangeEquals(const std::string& msg, ExpectedRange expected, GotRange got) const
+        void RangeEquals(const std::string& msg, ExpectedRange& expected, GotRange& got) const
         {
             RangeEquals(msg, cbegin(expected), cend(expected), cbegin(got), cend(got));
         }
         
         template<class ExpectedRange, class GotRange>
-        void RangeEquals(ExpectedRange expected, GotRange got) const
+        void RangeEquals(ExpectedRange&& expected, GotRange&& got) const
         {
-            RangeEquals(std::string(), expected, got);
+            RangeEquals(std::string(), std::forward<ExpectedRange>(expected), std::forward<GotRange>(got));
         }
         
-        template<typename ExpectedValue, size_t ExpectedN, class GotRange>
-        void RangeEquals(ExpectedValue (&expected)[ ExpectedN ], GotRange got) const
-        {
-            RangeEquals(std::string(), as_container(expected), got);
-        }
-        
-        template<class ExpectedRange, typename GotValue, size_t GotN>
-        void RangeEquals(ExpectedRange expected, GotValue (&got)[ GotN ]) const
-        {
-            RangeEquals(std::string(), expected, as_container(got));
-        }
-        
-        template<typename ExpectedValue, size_t ExpectedN, typename GotValue, size_t GotN>
-        void RangeEquals(ExpectedValue (&expected)[ ExpectedN ], GotValue (&got)[ GotN ]) const
-        {
-            RangeEquals(std::string(), as_container(expected), as_container(got));
-        }
-        
-        template<typename ExpectedValue, size_t ExpectedN, class GotRange>
-        void RangeEquals(const std::string& msg, ExpectedValue (&expected)[ ExpectedN ], GotRange got) const
-        {
-            RangeEquals(msg, as_container(expected), got);
-        }
-        
-        template<class ExpectedRange, typename GotValue, size_t GotN>
-        void RangeEquals(const std::string& msg, ExpectedRange expected, GotValue (&got)[ GotN ]) const
-        {
-            RangeEquals(msg, expected, as_container(got));
-        }
-        
-        template<typename ExpectedValue, size_t ExpectedN, typename GotValue, size_t GotN>
-        void RangeEquals(const std::string& msg, ExpectedValue (&expected)[ ExpectedN ], GotValue (&got)[ GotN ]) const
-        {
-            RangeEquals(msg, as_container(expected), as_container(got));
-        }
-
         inline std::string spacer(const std::string& s, size_t width, char fillchar)
         {
             return s.size() < width ? std::string(width - s.size(), fillchar) : std::string();
