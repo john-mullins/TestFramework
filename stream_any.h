@@ -235,7 +235,7 @@ namespace UnitTests
             output(s, t, std::true_type{});
         }
 
-        void output_range_or_type(std::ostream& s, const std::string& t, const std::true_type&)
+        inline void output_range_or_type(std::ostream& s, const std::string& t, const std::true_type&)
         {
             output(s, t, std::true_type{});
         }

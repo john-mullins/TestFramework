@@ -405,7 +405,7 @@ namespace UnitTests
         
 		void MultiLineEquals(std::string message, std::string expected, std::string got)
 		{
-			MultiLineEquals(message, expected, split(got, "\n"));
+			MultiLineEquals(message, split(expected, "`n"), split(got, "\n"));
 		}
 
     private:
@@ -424,7 +424,7 @@ namespace UnitTests
             {
                 auto end = s.find_first_of(delims, start);
                 if (end != start)
-                    results.emplace_back(s.c_str() + start, end == std::string::npos ? std::string::npos : end - start);
+                    results.emplace_back(s.substr(start, end - start));
                 
                 start = s.find_first_not_of(delims, end);
             }

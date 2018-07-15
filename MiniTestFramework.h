@@ -73,7 +73,7 @@ namespace UnitTests
             virtual	void Run(size_t index) const override
             {
                 auto&& args = *(cont.begin() + index);
-                fn(args, args);
+                fn(args);
             }
             
         private:
@@ -96,6 +96,7 @@ namespace UnitTests
         template<class Container, class Function>
         size_t AddParamTest(const Container& cont, const Function &fn, const char* name, const char * file, int line)
         {
+            //auto test = std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line);
             auto test = std::unique_ptr<Test>(std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
             return AddTest(std::move(test));
         }
@@ -181,14 +182,14 @@ namespace UnitTests
     struct name																									\
     {																											\
         template<typename T>																					\
-        void operator()(const T& param, const T& args) const;												    \
+        void operator()(const T& args) const;												    \
     };																											\
     namespace	{																								\
         namespace PP_CAT(unique, __LINE__)	{															        \
             const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);	\
         }																										\
     }																											\
-    template<typename T> void name::operator()(const T& param, const T& args) const								\
+    template<typename T> void name::operator()(const T& args) const								\
     /**/
     
 #define TEST_MAIN()                                                                                               \

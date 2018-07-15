@@ -18,7 +18,7 @@ namespace UnitTests
         }
     }
     
-    void add_escapes(std::string& s, const char * escapes = "\n\t\r\v\\")
+    inline void add_escapes(std::string& s, const char * escapes = "\n\t\r\v\\")
     {
         for (auto i = s.find_first_of(escapes); i != std::string::npos; i = s.find_first_of(escapes, i))
         {
