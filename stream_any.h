@@ -8,6 +8,13 @@
 #include <string>
 #include <utility>
 
+#ifdef __has_include                           // Check if __has_include is present
+#  if __has_include(<string_view>)             // Check for a standard library
+#    include<string_view>
+#    define HAS_STRING_VIEW
+#  endif 
+#endif
+
 namespace UnitTests
 {
     // Provides a traits class is_streamable<T> which detects at compile time whether a type has a suitable
@@ -132,6 +139,11 @@ namespace UnitTests
             s << static_cast<signed int>(t);
         }
 
+        inline void output(std::ostream& s, bool t, const std::true_type&)
+        {
+            s << t;
+        }
+
         // the default streamer
         template<typename T>
         static void output(std::ostream& s, const T& t, const std::true_type&)
@@ -239,7 +251,13 @@ namespace UnitTests
         {
             output(s, t, std::true_type{});
         }
-        
+
+#ifdef HAS_STRING_VIEW 
+        inline void output_range_or_type(std::ostream& s, std::string_view t, const std::true_type&)
+        {
+            output(s, t, std::true_type{});
+        }
+#endif
         template<typename T>
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
         {	// this call here will dispatch to a function that streams or not depending on whether
