@@ -347,7 +347,7 @@ namespace UnitTests
         template<class ExpectedRange, class GotRange>
         void RangeEquals(ExpectedRange&& expected, GotRange&& got) const
         {
-            RangeEquals(std::string(), std::forward<ExpectedRange>(expected), std::forward<GotRange>(got));
+            RangeEquals(std::string(), cbegin(expected), cend(expected), cbegin(got), cend(got));
         }
         
         inline std::string spacer(const std::string& s, size_t width, char fillchar)
