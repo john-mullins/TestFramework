@@ -109,7 +109,7 @@ namespace UnitTests
         
         bool IsVerbose(const std::vector<std::string>& args)
         {
-            return std::any_of(begin(args), end(args), [](auto s) {return s == "-v" or s == "--verbose";} );
+            return std::any_of(begin(args), end(args), [](auto s) {return s == "-v" || s == "--verbose";} );
         }
         
         #define PRINTF printf
