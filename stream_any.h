@@ -115,7 +115,7 @@ namespace UnitTests
         
         //for nonstreamable types
         template<typename T>
-        void output(std::ostream& s, const T&, const std::false_type&)
+        void output(std::ostream& s, const T& /*unused*/, const std::false_type& /*unused*/)
         {
             s << get_nonstreamable_output();
         }
@@ -134,19 +134,19 @@ namespace UnitTests
             output_unsigned(s, static_cast<unsigned int>(t), width);
         }
 
-        inline void output(std::ostream& s, signed char t, const std::true_type&)
+        inline void output(std::ostream& s, signed char t, const std::true_type& /*unused*/)
         {
             s << static_cast<signed int>(t);
         }
 
-        inline void output(std::ostream& s, bool t, const std::true_type&)
+        inline void output(std::ostream& s, bool t, const std::true_type& /*unused*/)
         {
             s << t;
         }
 
         // the default streamer
         template<typename T>
-        static void output(std::ostream& s, const T& t, const std::true_type&)
+        static void output(std::ostream& s, const T& t, const std::true_type& /*unused*/)
         {
             //  The optimiser will probably throw away the non taken branch
             //  In C++17 if constexpr would gaurantee that only the taken
@@ -177,7 +177,7 @@ namespace UnitTests
         //  Here we have a pair of functions that implement std::apply
         //  apply is a C++17 function, these work in C++14
         template <typename Function, typename Tuple, std::size_t... I>
-        constexpr decltype(auto) apply_impl(Function&& f, Tuple&& t, std::index_sequence<I...>)
+        constexpr decltype(auto) apply_impl(Function&& f, Tuple&& t, std::index_sequence<I...> /*unused*/)
         {
             return f(std::get<I>(std::forward<Tuple>(t))...);
         }
@@ -213,26 +213,26 @@ namespace UnitTests
         }
         
         template<typename... Ts>
-        void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type&)
+        void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type& /*unused*/)
         {
             output_container(s, tup);
         }
 
         // Pair support
         template<typename First, typename Second>
-        void output(std::ostream& s, const std::pair<First, Second>& tup, const std::false_type&)
+        void output(std::ostream& s, const std::pair<First, Second>& tup, const std::false_type& /*unused*/)
         {
             output_container(s, tup);
         }
 
         template<typename T>
-        void output_range_or_type(std::ostream& s, const T& t, const std::false_type&)
+        void output_range_or_type(std::ostream& s, const T& t, const std::false_type& /*unused*/)
         {
             output(s, t, is_streamable<T>{});
         }
         
         template<typename T>
-        void output_range_or_type(std::ostream& s, const T& t, const std::true_type&)
+        void output_range_or_type(std::ostream& s, const T& t, const std::true_type& /*unused*/)
         {
             s << "[\n";
             for (auto&& value : t)
@@ -242,18 +242,18 @@ namespace UnitTests
 
         //  We do not want these to go down the container type route just displays as strings
         template <size_t N>
-        void output_range_or_type(std::ostream& s, const char(&t)[N], const std::true_type&)
+        void output_range_or_type(std::ostream& s, const char(&t)[N], const std::true_type& /*unused*/)
         {
             output(s, t, std::true_type{});
         }
 
-        inline void output_range_or_type(std::ostream& s, const std::string& t, const std::true_type&)
+        inline void output_range_or_type(std::ostream& s, const std::string& t, const std::true_type& /*unused*/)
         {
             output(s, t, std::true_type{});
         }
 
 #ifdef HAS_STRING_VIEW 
-        inline void output_range_or_type(std::ostream& s, std::string_view t, const std::true_type&)
+        inline void output_range_or_type(std::ostream& s, std::string_view t, const std::true_type& /*unused*/)
         {
             output(s, t, std::true_type{});
         }

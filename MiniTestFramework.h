@@ -5,6 +5,7 @@
 #include "testfailure.h"
 #include "TestHelpers.h"
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace UnitTests
@@ -25,7 +26,7 @@ namespace UnitTests
         class Test
         {
         public:
-            Test(const std::string& name, const char * file, int line) : name(name), file(file), line(line) {}
+            Test(std::string  name, const char * file, int line) : name(std::move(name)), file(file), line(line) {}
             
             virtual void Run(size_t) const = 0;
             virtual size_t NumTests() const = 0;
@@ -45,8 +46,8 @@ namespace UnitTests
             {
             }
             
-            virtual void Run(size_t) const override { fn(); }
-            virtual size_t NumTests() const override { return 1; }
+            void Run(size_t /*unused*/) const override { fn(); }
+            size_t NumTests() const override { return 1; }
             
         private:
             void (*fn)();
@@ -58,19 +59,19 @@ namespace UnitTests
         public:
             using param_type = typename Container::value_type;
             
-            ParamFunctionTest(const Container& cont, const Function& fn, const std::string& name, const char * file, int line)
+            ParamFunctionTest(Container  cont, const Function& fn, const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
-                    cont(cont),
+                    cont(std::move(cont)),
                     fn(fn)
             {
             }
             
-            virtual	size_t NumTests() const override
+            	size_t NumTests() const override
             {
                 return std::distance(cont.begin(), cont.end());
             }
             
-            virtual	void Run(size_t index) const override
+            	void Run(size_t index) const override
             {
                 auto&& args = *(cont.begin() + index);
                 fn(args);
@@ -138,12 +139,12 @@ namespace UnitTests
                     }
                     catch (TestFailure& e)
                     {
-                        failures.push_back(std::make_pair(name, e.what()));
+                        failures.emplace_back(name, e.what());
                         PRINTF(!verbose ? "F" : "FAIL\n");
                     }
                     catch (const std::exception& e)
                     {
-                        failures.push_back(std::make_pair(name, e.what()));
+                        failures.emplace_back(name, e.what());
                         PRINTF(!verbose ? "E" : "EXCEPTION\n");
                         ++errors;
                     }

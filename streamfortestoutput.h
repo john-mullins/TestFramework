@@ -101,13 +101,13 @@ namespace UnitTests
         };
         
         template<class T, class U>
-        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, std::false_type)
+        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, std::false_type /*unused*/)
         { 
             return s << stream(t.t) << " (uncoerced=" << stream(t.u) << ")";
         }
         
         template<class T, class U>
-        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, std::true_type)
+        std::ostream& streamit(std::ostream& s, const expected_got_outputter_with_coercion<T, U>& t, std::true_type /*unused*/)
         { 
             return s << stream(t.t);
         }
