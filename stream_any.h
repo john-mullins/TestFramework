@@ -124,7 +124,8 @@ namespace UnitTests
         template<typename T>
         void output_unsigned(std::ostream& s, const T& t, int width)
         {
-            s << std::hex << std::showbase << std::setw(2 + width) << std::internal << std::setfill('0') << t <<
+            width += 2;
+            s << std::hex << std::showbase << std::setw(width) << std::internal << std::setfill('0') << t <<
                 std::noshowbase << std::dec;
         }
 
@@ -260,7 +261,7 @@ namespace UnitTests
 #endif
         template<typename T>
         std::ostream& operator<<(std::ostream& s, const outputter<T> & t)
-        {	// this call here will dispatch to a function that streams or not depending on whether
+        {    // this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
             output_range_or_type(s, t.t, is_range<T>{});
             return s;

@@ -32,17 +32,17 @@ using std::cend;
 // use ASSERT_THROWS and ASSERT_THROWS_MSG to assert that code should test that code
 // e.g.
 //
-//	void f(int n) 
+//  void f(int n) 
 //  { 
-//    if (n < 0) throw std::out_of_range();
-//	}
+//      if (n < 0) throw std::out_of_range();
+//  }
 //
-//	TEST(test_f)
-//	{
-//		ASSERT_THROWS(std::out_of_range, f(-1));
-//	}
+//  TEST(test_f)
+//  {
+//      ASSERT_THROWS(std::out_of_range, f(-1));
+//  }
 #define ASSERT_THROWS_MSG(msg, exception, code)                             \
-	ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, "", code);               \
+    ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, "", code);               \
 /**/
 
 #define ASSERT_THROWS(exception, code)                                      \
@@ -52,24 +52,24 @@ using std::cend;
 
 // Ensure that eval(code) raises `exception`, and exception.what() should contain the string expectedmsg.
 // For example:
-//		std::vector<int> v;
-//		ASSERT_THROWS_WITH_MESSAGE(std::index_error, "out of bounds", v.at(0));
-#define ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, expectedmsg, code)	\
+//      std::vector<int> v;
+//      ASSERT_THROWS_WITH_MESSAGE(std::index_error, "out of bounds", v.at(0));
+#define ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, expectedmsg, code)    \
     try                                                                     \
     {                                                                       \
-      code;                                                                 \
-      FAIL(msg);                                                            \
+        code;                                                               \
+        FAIL(msg);                                                          \
     }                                                                       \
-    catch (const UnitTests::TestFailure&)	{ throw; }                      \
+    catch (const UnitTests::TestFailure&)    { throw; }                     \
     catch (const exception& e)                                              \
     {                                                                       \
-      std::string what = e.what();                                          \
-      if (what.find(expectedmsg) == std::string::npos)                      \
-      {                                                                     \
-          FAIL(msg + std::string("\n"                                       \
-                                 "Exception " #exception " was raised but what() did not contain expected message\n"    \
-                                 "Expected : <") + expectedmsg + std::string(">\n"                                      \
-                                                                             "Actual   : <") + what + ">");             \
+        std::string what = e.what();                                        \
+        if (what.find(expectedmsg) == std::string::npos)                    \
+        {                                                                   \
+            FAIL((msg) + std::string("\n"                                   \
+             "Exception " #exception " was raised but what() did not contain expected message\n"    \
+                                 "Expected : <") + (expectedmsg) + std::string(">\n"                \
+                                 "Actual   : <") + what + ">");             \
       }                                                                     \
     }                                                                       \
 /**/
@@ -82,15 +82,15 @@ using std::cend;
 // use ASSERT_NO_THROW and ASSERT_NO_THROW_MSG to assert that the code does not throw
 // e.g.
 //
-//	void f(int n) 
+//  void f(int n) 
 //  { 
-//    if (n < 0) throw std::out_of_range();
-//	}
+//      if (n < 0) throw std::out_of_range();
+//  }
 //
-//	TEST(test_f)
-//	{
-//		ASSERT_NO_THROW(f(0));
-//	}
+//  TEST(test_f)
+//  {
+//      ASSERT_NO_THROW(f(0));
+//  }
 #define ASSERT_NO_THROW_MSG(msg, code)                          \
     try                                                         \
     {                                                           \
@@ -102,11 +102,11 @@ using std::cend;
     }                                                           \
 /**/
 
-#define ASSERT_NO_THROW(code) 	ASSERT_NO_THROW_MSG("Unexpected exception thrown by " #code, code)
+#define ASSERT_NO_THROW(code)     ASSERT_NO_THROW_MSG("Unexpected exception thrown by " #code, code)
 
 
-#define SKIP()					throw UnitTests::TestSkipped()
-#define UNIMPLEMENTED			FAIL("Test not yet implemented");
+#define SKIP()                    throw UnitTests::TestSkipped()
+#define UNIMPLEMENTED            FAIL("Test not yet implemented");
 
 namespace UnitTests
 {
@@ -152,7 +152,7 @@ namespace UnitTests
     {
     public:
         Assert(const char * file, int line)
-        :	m_file(file),
+        :   m_file(file),
             m_line(line)
         {
         }
@@ -246,11 +246,11 @@ namespace UnitTests
             In(std::string(), t, std::forward<Container>(container));
         }
         
-        void In(const char* needle, std::string haystack) const { return In(std::string(needle), haystack); }
+        void In(const char* needle, const std::string& haystack) const { return In(std::string(needle), haystack); }
 
         void In(const char* needle, const char* haystack) const { return In(std::string(needle), std::string(haystack)); }
 
-        void In(std::string needle, const char* haystack) const { return In(needle, std::string(haystack)); }
+        void In(const std::string& needle, const char* haystack) const { return In(needle, std::string(haystack)); }
         
         void In(std::string needle, std::string haystack) const
         {
@@ -258,9 +258,9 @@ namespace UnitTests
                 CreateInError("Expected to find \"", needle, haystack);
         }
         
-        void NotIn(const char* needle, std::string haystack) const { return NotIn(std::string(needle), haystack); }
+        void NotIn(const char* needle, const std::string& haystack) const { return NotIn(std::string(needle), haystack); }
         
-        void NotIn(std::string needle, const char* haystack) const { return NotIn(needle, std::string(haystack)); }
+        void NotIn(const std::string& needle, const char* haystack) const { return NotIn(needle, std::string(haystack)); }
 
         void NotIn(const char* needle, const char* haystack) const { return NotIn(std::string(needle), std::string(haystack)); }
 
@@ -373,40 +373,40 @@ namespace UnitTests
             RangeEquals(message, e, g);
         }
 
-		void MultiLineEquals(std::vector<std::string> expected, std::vector<std::string> got)
-		{
-			MultiLineEquals(std::string(), expected, got);
-		}
+        void MultiLineEquals(std::vector<std::string> expected, std::vector<std::string> got)
+        {
+            MultiLineEquals(std::string(), expected, got);
+        }
         
-		void MultiLineEquals(std::vector<std::string> expected, std::string got)
-		{
-			MultiLineEquals(std::string(), expected, got);
-		}
+        void MultiLineEquals(std::vector<std::string> expected, std::string got)
+        {
+            MultiLineEquals(std::string(), expected, got);
+        }
         
-		void MultiLineEquals(std::string expected, std::vector<std::string> got)
-		{
-			MultiLineEquals(std::string(), expected, got);
-		}
+        void MultiLineEquals(std::string expected, std::vector<std::string> got)
+        {
+            MultiLineEquals(std::string(), expected, got);
+        }
         
-		void MultiLineEquals(std::string expected, std::string got)
-		{
-			MultiLineEquals(std::string(), expected, got);
-		}
+        void MultiLineEquals(std::string expected, std::string got)
+        {
+            MultiLineEquals(std::string(), expected, got);
+        }
 
         void MultiLineEquals(std::string message, std::vector<std::string> expected, std::string got)
-		{
-			MultiLineEquals(message, expected, split(got, "\n"));
-		}
+        {
+            MultiLineEquals(message, expected, split(got, "\n"));
+        }
         
-		void MultiLineEquals(std::string message, std::string expected, std::vector<std::string> got)
-		{
-			MultiLineEquals(message, split(expected, "\n"), got);
-		}
+        void MultiLineEquals(std::string message, std::string expected, std::vector<std::string> got)
+        {
+            MultiLineEquals(message, split(expected, "\n"), got);
+        }
         
-		void MultiLineEquals(std::string message, std::string expected, std::string got)
-		{
-			MultiLineEquals(message, split(expected, "`n"), split(got, "\n"));
-		}
+        void MultiLineEquals(std::string message, std::string expected, std::string got)
+        {
+            MultiLineEquals(message, split(expected, "`n"), split(got, "\n"));
+        }
 
     private:
         void Error(const std::string& msg) const
@@ -488,8 +488,8 @@ namespace UnitTests
             OutputRange(s, expected_first, expected_last, got_first, got_last, indicate);
             Error(s.str());
         }
-        const char *	m_file;
-        int				m_line;
+        const char *    m_file;
+        int                m_line;
     };
 }
 

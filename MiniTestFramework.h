@@ -66,12 +66,12 @@ namespace UnitTests
             {
             }
             
-            	size_t NumTests() const override
+            size_t NumTests() const override
             {
                 return std::distance(cont.begin(), cont.end());
             }
             
-            	void Run(size_t index) const override
+            void Run(size_t index) const override
             {
                 auto&& args = *(cont.begin() + index);
                 fn(args);
@@ -105,7 +105,7 @@ namespace UnitTests
         template <typename T, size_t N, class Function>
         size_t AddParamTest( const T (&data)[ N ], const Function &fn, const char * name, const char * file, int line)
         {
-            return AddParamTest(std::vector<T>(data, data + N), fn, name, file, line);
+            return AddParamTest(std::vector<T>(&data[0], &data[N]), fn, name, file, line);
         }
         
         bool IsVerbose(const std::vector<std::string>& args)
@@ -168,8 +168,8 @@ namespace UnitTests
         
     private:
         std::vector<std::unique_ptr<Test>> tests;
-    };
-    
+	};
+
 #define TEST(name) void name();                                                                                             \
     namespace {                                                                                                             \
         namespace PP_CAT(unique, __LINE__) {                                                                                \
@@ -178,21 +178,21 @@ namespace UnitTests
     }                                                                                                                       \
     void name()                                                                                                             \
     /**/
-    
+
 #define PARAM_TEST(name, data)																					\
     struct name																									\
     {																											\
         template<typename T>																					\
-        void operator()(const T& args) const;												    \
+        void operator()(const T& args) const;																	\
     };																											\
     namespace	{																								\
         namespace PP_CAT(unique, __LINE__)	{															        \
             const size_t ignore_this_warning = UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__);	\
         }																										\
     }																											\
-    template<typename T> void name::operator()(const T& args) const								\
+    template<typename T> void name::operator()(const T& args) const												\
     /**/
-    
+
 #define TEST_MAIN()                                                                                               \
     UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                                                        \
     {                                                                                                             \
@@ -208,7 +208,9 @@ namespace UnitTests
     }                                                                                                             \
     int main(int argc, char ** argv)                                                                              \
     {                                                                                                             \
-        auto args = std::vector<std::string>(argv, argv + argc);                                                  \
+		auto end_argv = argv;																					  \
+		std::advance(end_argv, argc);																			  \
+        auto args = std::vector<std::string>(argv,end_argv);	                                                  \
         return UnitTests::MiniSuite::Instance().RunTests(args);                                                   \
     }                                                                                                             \
     /**/
