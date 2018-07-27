@@ -235,10 +235,14 @@ namespace UnitTests
         template<typename T>
         void output_range_or_type(std::ostream& s, const T& t, const std::true_type& /*unused*/)
         {
-            s << "[\n";
-            for (auto&& value : t)
-                s << "  " << stream_any(value) << ",\n";
-            s << "]\n";
+            s << "[";
+            if (begin(t) != end(t))
+            {
+                auto first = begin(t);
+                s << stream_any(*first++);
+                std::for_each(first, end(t), [&s](auto value) { s << ", " << stream_any(value); });
+            }
+            s << "]";
         }
 
         //  We do not want these to go down the container type route just displays as strings
