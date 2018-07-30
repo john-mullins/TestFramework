@@ -26,15 +26,15 @@ namespace UnitTests
         class Test
         {
         public:
-            Test(std::string  name, const char * file, int line) : name(std::move(name)), file(file), line(line) {}
+            Test(std::string  name, const char * file, int line) : m_name(std::move(name)), m_file(file), m_line(line) {}
             
-            virtual void Run(size_t) const = 0;
-            virtual size_t NumTests() const = 0;
+            virtual void Run(int) const = 0;
+            virtual int NumTests() const = 0;
             virtual ~Test() = default;
             
-            std::string     name;
-            const char *    file;
-            int             line;
+            std::string     m_name;
+            const char *    m_file;
+            int             m_line;
         };
         
         class FunctionTest : public Test
@@ -42,15 +42,15 @@ namespace UnitTests
         public:
             FunctionTest(void (*fn)(), const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
-                    fn(fn)
+                    m_fn(fn)
             {
             }
             
-            void Run(size_t /*unused*/) const override { fn(); }
-            size_t NumTests() const override { return 1; }
+            void Run(int /*unused*/) const override { m_fn(); }
+            int NumTests() const override { return 1; }
             
         private:
-            void (*fn)();
+            void (*m_fn)();
         };
         
         template<class Container, class Function>
@@ -61,25 +61,26 @@ namespace UnitTests
             
             ParamFunctionTest(Container  cont, const Function& fn, const std::string& name, const char * file, int line)
                 :   Test(name, file, line),
-                    cont(std::move(cont)),
-                    fn(fn)
+                    m_cont(std::move(cont)),
+                    m_fn(fn)
             {
             }
             
-            size_t NumTests() const override
+            int NumTests() const override
             {
-                return std::distance(cont.begin(), cont.end());
+                return static_cast<int>(std::distance(m_cont.begin(), m_cont.end()));
             }
             
-            void Run(size_t index) const override
+            void Run(int index) const override
             {
-                auto&& args = *(cont.begin() + index);
-                fn(args);
+                auto arg = m_cont.begin();
+                std::advance(arg, index);
+                m_fn(*arg);
             }
             
         private:
-            Container cont;
-            Function  fn;
+            Container m_cont;
+            Function  m_fn;
         };
         
         size_t AddTest(std::unique_ptr<Test> test)
@@ -121,12 +122,12 @@ namespace UnitTests
             auto failures = std::vector<std::pair<std::string, std::string>>{};
             auto errors = 0U;
             auto num_tests = 0U;
-            for (auto&& test : tests)
+            for (auto& test : tests)
             {
-                for (size_t index = 0; index != test->NumTests(); ++index)
+                for (int index = 0; index != test->NumTests(); ++index)
                 {
                     auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
-                    auto name = test->name + indexs;
+                    auto name = test->m_name + indexs;
                     if (verbose)
                     {
                         PRINTF("Running %s ", name.c_str());

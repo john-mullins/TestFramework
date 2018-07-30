@@ -35,7 +35,6 @@ namespace UnitTests
         // get the failure message WITHOUT the file and line number bit
         std::string msg() const { return m_msg; }
         
-        ~TestFailure() noexcept override = default;
     private:
         std::string	m_what;
         std::string m_msg;

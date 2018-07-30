@@ -75,7 +75,7 @@ namespace UnitTests
         template<class T>
         struct expected_got_outputter
         {
-            expected_got_outputter(const T& t) : t(t) {}
+            expected_got_outputter(const T& type) : t(type) {}
             const T& t;
         };
         
@@ -95,7 +95,7 @@ namespace UnitTests
         template<class T, class U>
         struct expected_got_outputter_with_coercion
         {
-            expected_got_outputter_with_coercion(const T& t, const U& u) : t(t), u(u) {}
+            expected_got_outputter_with_coercion(const T& first_type, const U& second_type) : t(first_type), u(second_type) {}
             const T& t;
             const U& u;
         };

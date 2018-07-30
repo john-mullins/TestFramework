@@ -162,7 +162,7 @@ namespace UnitTests
         template<typename T>
         struct outputter
         {
-            outputter(const T& t) : t(t) {}
+            outputter(const T& type) : t(type) {}
             const T& t;
         };
     }

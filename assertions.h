@@ -224,7 +224,7 @@ namespace UnitTests
             }
         }
         
-        void CreateInError(const char* msg, const std::string& needle, const std::string& haystack) const
+        [[noreturn]] void CreateInError(const char* msg, const std::string& needle, const std::string& haystack) const
         {
             auto s = std::stringstream{};
             s << msg << needle << "\" in string \"" << haystack << " ";
@@ -298,12 +298,12 @@ namespace UnitTests
             }
         }
         
-        void Fail() const
+        [[noreturn]] void Fail() const
         {
             Fail("Test FAIL'ed");
         }
         
-        void Fail(const std::string& msg) const
+        [[noreturn]] void Fail(const std::string& msg) const
         {
             Error(msg);
         }
@@ -409,7 +409,7 @@ namespace UnitTests
         }
 
     private:
-        void Error(const std::string& msg) const
+        [[noreturn]] void Error(const std::string& msg) const
         {
             throw TestFailure(msg, m_file, m_line);
         }
@@ -460,7 +460,7 @@ namespace UnitTests
         }
         
         template<typename Value, typename ContainerIterator>
-        void ContainmentError(const std::string& msg, const std::string& msg2, Value value, ContainerIterator begin, ContainerIterator end) const
+        [[noreturn]] void ContainmentError(const std::string& msg, const std::string& msg2, Value value, ContainerIterator begin, ContainerIterator end) const
         {
             auto s = std::ostringstream{};
             if (!msg.empty())
@@ -475,7 +475,7 @@ namespace UnitTests
         }
         
         template<class ExpectedIt, class GotIterator>
-        void RangeError(const std::string& msg, const std::string& reason,
+        [[noreturn]] void RangeError(const std::string& msg, const std::string& reason,
                         ExpectedIt expected_first, ExpectedIt expected_last, GotIterator got_first, GotIterator got_last,
                         ExpectedIt indicate, ptrdiff_t expected_len, ptrdiff_t got_len) const
         {
@@ -489,7 +489,7 @@ namespace UnitTests
             Error(s.str());
         }
         const char *    m_file;
-        int                m_line;
+        int             m_line;
     };
 }
 
