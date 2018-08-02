@@ -1,6 +1,7 @@
 
 #if !defined(TestFramework_TestHelpers_h_)
 #define TestFramework_TestHelpers_h_
+#include <string>
 
 namespace UnitTests
 {
@@ -32,15 +33,16 @@ namespace UnitTests
     template<typename In, typename Out = In>
     struct in_out
     {
-        In in;
+        In  in;
         Out out;
     };
+
     template<typename In, typename Out = In>
     struct msg_in_out
     {
         std::string msg;
-        In in;
-        Out out;
+        In          in;
+        Out         out;
     };
     template<typename Lhs, typename Rhs = Lhs, typename Out = Lhs>
     struct binary_in_out
@@ -49,16 +51,15 @@ namespace UnitTests
         Rhs rhs;
         Out out;
     };
+
     template<typename Lhs, typename Rhs = Lhs, typename Out = Lhs>
     struct msg_binary_in_out
     {
         std::string msg;
-        Lhs lhs;
-        Rhs rhs;
-        Out out;
+        Lhs         lhs;
+        Rhs         rhs;
+        Out         out;
     };
-}
+} // namespace UnitTests
 
 #endif
-
-
