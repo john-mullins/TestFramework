@@ -191,7 +191,7 @@ namespace UnitTests
         }
 
         template <typename Function, typename Tuple>
-        constexpr decltype(auto) apply(Function&& f, Tuple&& t)
+        constexpr decltype(auto) apply_tuple(Function&& f, Tuple&& t)
         {
             return apply_impl(std::forward<Function>(f), std::forward<Tuple>(t),
                 std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
@@ -216,7 +216,7 @@ namespace UnitTests
         {
             s << "(";
             auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)...); };
-            apply(f, tup);
+            apply_tuple(f, tup);
             s << ")";
         }
 
