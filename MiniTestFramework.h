@@ -122,12 +122,23 @@ namespace UnitTests
         }
 
 #define PRINTF printf
+        void show_failures(const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)
+        {
+            if (!failures.empty())
+            {
+                PRINTF("%s :-\n", type.c_str());
+                for (auto& failure : failures)
+                {
+                    PRINTF("%s while testing TEST(%s)\n", failure.second.c_str(), failure.first.c_str());
+                }
+            }
+        }
 
         int RunTests(const std::vector<std::string>& args)
         {
             auto verbose   = IsVerbose(args);
             auto failures  = std::vector<std::pair<std::string, std::string>>{};
-            auto errors    = 0U;
+            auto errors    = std::vector<std::pair<std::string, std::string>>{};
             auto num_tests = 0U;
             for (auto& test : tests)
             {
@@ -152,25 +163,18 @@ namespace UnitTests
                     }
                     catch (const std::exception& e)
                     {
-                        failures.emplace_back(name, e.what());
+                        errors.emplace_back(name, e.what());
                         PRINTF(!verbose ? "E" : "EXCEPTION\n");
-                        ++errors;
                     }
                 }
             }
             PRINTF("\n");
-            if (!failures.empty())
-            {
-                PRINTF("Failures :-\n");
-                for (auto&& failure : failures)
-                {
-                    PRINTF("%s  while testing TEST(%s)\n", failure.second.c_str(), failure.first.c_str());
-                }
-            }
+            show_failures(errors, "Errors");
+            show_failures(failures, "Failures");
             PRINTF("%d Tests.\n", static_cast<int>(num_tests));
             PRINTF("%d Skipped.\n", 0);
-            PRINTF("%d Failures.\n", static_cast<int>(failures.size() - errors));
-            PRINTF("%d Errors.\n", static_cast<int>(errors));
+            PRINTF("%d Failures.\n", static_cast<int>(failures.size()));
+            PRINTF("%d Errors.\n", static_cast<int>(errors.size()));
             return static_cast<int>(failures.size());
         }
 
