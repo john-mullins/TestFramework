@@ -65,6 +65,7 @@ using std::end;
     }                                                                                                \
     catch (const exception& e)                                                                       \
     {                                                                                                \
+        using namespace std::literals;                                                               \
         std::string what = e.what();                                                                 \
         if (what.find(expectedmsg) == std::string::npos)                                             \
         {                                                                                            \
