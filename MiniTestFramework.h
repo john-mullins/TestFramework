@@ -112,7 +112,8 @@ namespace UnitTests
         template <typename T, size_t N, class Function>
         size_t AddParamTest(const T (&data)[N], const Function& fn, const char* name, const char* file, int line)
         {
-            return AddParamTest(std::vector<T>(&data[0], &data[N]), fn, name, file, line);
+            using std::begin, std::end;
+            return AddParamTest(std::vector<T>(begin(data), end(data)), fn, name, file, line);
         }
 
         bool IsVerbose(const std::vector<std::string>& args)
