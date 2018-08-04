@@ -53,31 +53,31 @@ using std::end;
 // For example:
 //      std::vector<int> v;
 //      ASSERT_THROWS_WITH_MESSAGE(std::index_error, "out of bounds", v.at(0));
-#define ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, expectedmsg, code)                                        \
-    try                                                                                                          \
-    {                                                                                                            \
-        code;                                                                                                    \
-        FAIL(msg);                                                                                               \
-    }                                                                                                            \
-    catch (const UnitTests::TestFailure&)                                                                        \
-    {                                                                                                            \
-        throw;                                                                                                   \
-    }                                                                                                            \
-    catch (const exception& e)                                                                                   \
-    {                                                                                                            \
-        std::string what = e.what();                                                                             \
-        if (what.find(expectedmsg) == std::string::npos)                                                         \
-        {                                                                                                        \
-            FAIL((msg) +                                                                                         \
-                 std::string("\n"                                                                                \
-                             "Exception " #exception " was raised but what() did not contain expected message\n" \
-                             "Expected : <") +                                                                   \
-                 (expectedmsg) +                                                                                 \
-                 std::string(">\n"                                                                               \
-                             "Actual   : <") +                                                                   \
-                 what + ">");                                                                                    \
-        }                                                                                                        \
-    }                                                                                                            \
+#define ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, expectedmsg, code)                            \
+    try                                                                                              \
+    {                                                                                                \
+        code;                                                                                        \
+        FAIL(msg);                                                                                   \
+    }                                                                                                \
+    catch (const UnitTests::TestFailure&)                                                            \
+    {                                                                                                \
+        throw;                                                                                       \
+    }                                                                                                \
+    catch (const exception& e)                                                                       \
+    {                                                                                                \
+        std::string what = e.what();                                                                 \
+        if (what.find(expectedmsg) == std::string::npos)                                             \
+        {                                                                                            \
+            FAIL((msg) +                                                                             \
+                 "\n"                                                                                \
+                 "Exception " #exception " was raised but what() did not contain expected message\n" \
+                 "Expected : <"s +                                                                   \
+                 (expectedmsg) +                                                                     \
+                 ">\n"                                                                               \
+                 "Actual   : <"s +                                                                   \
+                 what + ">"s);                                                                       \
+        }                                                                                            \
+    }                                                                                                \
     /**/
 
 #define ASSERT_THROWS_WITH_MESSAGE(exception, expectedmsg, code)                                 \
