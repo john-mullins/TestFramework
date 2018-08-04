@@ -129,9 +129,7 @@ namespace UnitTests
         template <typename T>
         void output_unsigned(std::ostream& s, const T& t, int width)
         {
-            width += 2;
-            s << std::hex << std::showbase << std::setw(width) << std::internal << std::setfill('0') << t
-              << std::noshowbase << std::dec;
+            s << "0x" << std::hex << std::setw(width) << std::internal << std::setfill('0') << t << std::dec;
         }
 
         //  signed and unsigned chars are numeric types not characters
