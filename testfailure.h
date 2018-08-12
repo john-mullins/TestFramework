@@ -1,10 +1,5 @@
 #if !defined(TestFailure_h_)
 #define TestFailure_h_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #include <exception>
 #include <string>
 
