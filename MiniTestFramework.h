@@ -42,8 +42,8 @@ namespace UnitTests
         class FunctionTest : public Test
         {
         public:
-            FunctionTest(void (*fn)(), const std::string& name, const char* file, int line)
-                : Test(name, file, line), m_fn(fn)
+            FunctionTest(void (*fn)(), std::string name, const char* file, int line)
+                : Test(std::move(name), file, line), m_fn(fn)
             {
             }
 
@@ -66,8 +66,8 @@ namespace UnitTests
         public:
             using param_type = typename Container::value_type;
 
-            ParamFunctionTest(Container cont, const Function& fn, const std::string& name, const char* file, int line)
-                : Test(name, file, line), m_cont(std::move(cont)), m_fn(fn)
+            ParamFunctionTest(Container cont, const Function& fn, std::string name, const char* file, int line)
+                : Test(std::move(name), file, line), m_cont(std::move(cont)), m_fn(fn)
             {
             }
 
@@ -94,7 +94,7 @@ namespace UnitTests
             return 0;
         }
 
-        size_t AddTest(void (*fn)(), const std::string& name, const char* file, int line)
+        size_t AddTest(void (*fn)(), const char* name, const char* file, int line)
         {
             auto test = std::unique_ptr<Test>(std::make_unique<FunctionTest>(fn, name, file, line));
             return AddTest(std::move(test));
