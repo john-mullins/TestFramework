@@ -106,7 +106,7 @@ namespace UnitTests
     using iterate_it = decltype(begin(std::declval<T&>()), end(std::declval<T&>()));
 
     template <typename T>
-    using is_range = details::is_well_formed<iterate_it, T>;
+    using is_iterable = details::is_well_formed<iterate_it, T>;
 
     namespace stream_any_details
     {
@@ -272,7 +272,7 @@ namespace UnitTests
         std::ostream& operator<<(std::ostream& s, const outputter<T>& t)
         { // this call here will dispatch to a function that streams or not depending on whether
             // T has a suitable operator<<.
-            output_range_or_type(s, t.t, is_range<T>{});
+            output_range_or_type(s, t.t, is_iterable<T>{});
             return s;
         }
     } // namespace stream_any_details
@@ -294,6 +294,7 @@ namespace UnitTests
         os << stream_any(t);
         return os.str();
     }
+
 } // namespace UnitTests
 
 #endif
