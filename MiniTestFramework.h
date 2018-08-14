@@ -5,6 +5,7 @@
 #include "assertions.h"
 #include "testfailure.h"
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -34,6 +35,19 @@ namespace UnitTests
             virtual int  NumTests() const = 0;
             virtual ~Test()               = default;
 
+            std::string BareName(const std::string& indexs) const
+            {
+                return m_name + indexs;
+            }
+
+            std::string Name(const std::string& indexs) const
+            {
+                std::stringstream s;
+                s << BareName(indexs) << " @ " << m_file << ':' << m_line;
+                return s.str();
+            }
+
+        private:
             std::string m_name;
             const char* m_file;
             int         m_line;
@@ -145,10 +159,9 @@ namespace UnitTests
                 for (int index = 0; index != test->NumTests(); ++index)
                 {
                     auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
-                    auto name   = test->m_name + indexs;
                     if (verbose)
                     {
-                        PRINTF("Running %s ", name.c_str());
+                        PRINTF("Running %s ", test->BareName(indexs).c_str());
                     }
                     try
                     {
@@ -158,12 +171,12 @@ namespace UnitTests
                     }
                     catch (TestFailure& e)
                     {
-                        failures.emplace_back(name, e.what());
+                        failures.emplace_back(test->Name(indexs), e.what());
                         PRINTF(!verbose ? "F" : "FAIL\n");
                     }
                     catch (const std::exception& e)
                     {
-                        errors.emplace_back(name, e.what());
+                        errors.emplace_back(test->Name(indexs), e.what());
                         PRINTF(!verbose ? "E" : "EXCEPTION\n");
                     }
                 }
