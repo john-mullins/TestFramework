@@ -4,6 +4,7 @@
 #include "TestHelpers.h"
 #include "assertions.h"
 #include "testfailure.h"
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <utility>
@@ -18,6 +19,19 @@ namespace UnitTests
 #define PP_CAT_AGAIN(a, b) PP_CAT_AGAIN_II(~, a##b)
 #define PP_CAT_AGAIN_II(p, res) res
 #endif
+
+    template <typename T>
+    std::ostream& print(std::ostream& s, const T& arg)
+    {
+        return s << arg;
+    }
+
+    template <typename T, typename... Args>
+    void print(std::ostream& s, const T& arg, Args... args)
+    {
+        print(s, arg);
+        print(s, args...);
+    }
 
     class MiniSuite
     {
@@ -135,15 +149,14 @@ namespace UnitTests
             return std::any_of(begin(args), end(args), [](auto s) { return s == "-v" || s == "--verbose"; });
         }
 
-#define PRINTF printf
         void show_failures(const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)
         {
             if (!failures.empty())
             {
-                PRINTF("%s :-\n", type.c_str());
+                print(std::cout, type, " :-\n");
                 for (auto& failure : failures)
                 {
-                    PRINTF("%s while testing TEST(%s)\n", failure.second.c_str(), failure.first.c_str());
+                    print(std::cout, failure.second, " while testing TEST(", failure.first, ")\n");
                 }
             }
         }
@@ -161,33 +174,33 @@ namespace UnitTests
                     auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
                     if (verbose)
                     {
-                        PRINTF("Running %s ", test->BareName(indexs).c_str());
+                        print(std::cout, "Running ", test->BareName(indexs), " ");
                     }
                     try
                     {
                         ++num_tests;
                         test->Run(index);
-                        PRINTF(!verbose ? "." : "OK\n");
+                        print(std::cout, !verbose ? "." : "OK\n");
                     }
                     catch (TestFailure& e)
                     {
                         failures.emplace_back(test->Name(indexs), e.what());
-                        PRINTF(!verbose ? "F" : "FAIL\n");
+                        print(std::cout, !verbose ? "F" : "FAIL\n");
                     }
                     catch (const std::exception& e)
                     {
                         errors.emplace_back(test->Name(indexs), e.what());
-                        PRINTF(!verbose ? "E" : "EXCEPTION\n");
+                        print(std::cout, !verbose ? "E" : "EXCEPTION\n");
                     }
                 }
             }
-            PRINTF("\n");
+            print(std::cout, "\n");
             show_failures(errors, "Errors");
             show_failures(failures, "Failures");
-            PRINTF("%d Tests.\n", static_cast<int>(num_tests));
-            PRINTF("%d Skipped.\n", 0);
-            PRINTF("%d Failures.\n", static_cast<int>(failures.size()));
-            PRINTF("%d Errors.\n", static_cast<int>(errors.size()));
+            print(std::cout, static_cast<int>(num_tests), " Tests.\n");
+            print(std::cout, 0, " Skipped.\n");
+            print(std::cout, static_cast<int>(failures.size()), " Failures.\n");
+            print(std::cout, static_cast<int>(errors.size()), " Errors.\n");
             return static_cast<int>(failures.size());
         }
 
