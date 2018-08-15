@@ -1,4 +1,5 @@
 #include "MiniTestFramework.h"
+#include <array>
 #include <deque>
 #include <forward_list>
 #include <list>
@@ -152,4 +153,12 @@ TEST(map_int_string)
     std::stringstream ss;
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("[(1, Nikto), (2, Barada), (3, Klaatu)]", ss.str());
+}
+
+TEST(std_array)
+{
+    auto              s = std::array<int, 4>{0, 1, 2, 156};
+    std::stringstream ss;
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("[0, 1, 2, 156]", ss.str());
 }
