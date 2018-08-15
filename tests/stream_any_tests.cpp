@@ -162,3 +162,19 @@ TEST(std_array)
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("[0, 1, 2, 156]", ss.str());
 }
+
+TEST(std_pair)
+{
+    auto              s = std::pair<int, std::string>{7, "Pieces of gold"s};
+    std::stringstream ss;
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("(7, Pieces of gold)", ss.str());
+}
+
+TEST(std_tuple)
+{
+    auto              s = std::tuple<int, std::string, unsigned int>{7, "Pieces of gold"s, 257};
+    std::stringstream ss;
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("(7, Pieces of gold, 0x00000101)", ss.str());
+}
