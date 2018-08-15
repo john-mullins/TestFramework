@@ -2,6 +2,7 @@
 #include <deque>
 #include <forward_list>
 #include <list>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -143,4 +144,12 @@ TEST(set_string)
     std::stringstream ss;
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("[Barada, Klaatu, Nikto]", ss.str());
+}
+
+TEST(map_int_string)
+{
+    auto              s = std::map<int, std::string>{{3, "Klaatu"}, {2, "Barada"}, {1, "Nikto"}};
+    std::stringstream ss;
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("[(1, Nikto), (2, Barada), (3, Klaatu)]", ss.str());
 }
