@@ -178,3 +178,4 @@ TEST(std_tuple)
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("(7, Pieces of gold, 0x00000101)", ss.str());
 }
+
