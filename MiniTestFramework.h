@@ -27,10 +27,10 @@ namespace UnitTests
     }
 
     template <typename T, typename... Args>
-    void print(std::ostream& s, const T& arg, Args... args)
+    std::ostream& print(std::ostream& s, const T& arg, Args... args)
     {
         print(s, arg);
-        print(s, args...);
+        return print(s, args...);
     }
 
     class MiniSuite
