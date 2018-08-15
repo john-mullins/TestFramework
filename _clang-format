@@ -1,0 +1,68 @@
+AccessModifierOffset  : -4
+AlignAfterOpenBracket : DontAlign
+AlignConsecutiveAssignments : true
+AlignConsecutiveDeclarations : true
+AlignEscapedNewlines : Left
+AlignOperands : true
+AlignTrailingComments : true
+AllowAllParametersOfDeclarationOnNextLine : true
+AllowShortBlocksOnASingleLine  : false
+AllowShortCaseLabelsOnASingleLine : false
+AllowShortFunctionsOnASingleLine : false
+AllowShortIfStatementsOnASingleLine : false
+AllowShortLoopsOnASingleLine : false
+AlwaysBreakAfterReturnType : None
+AlwaysBreakBeforeMultilineStrings  : false
+AlwaysBreakTemplateDeclarations : true
+BinPackArguments : true
+BinPackParameters : true
+BreakBeforeBraces : Custom
+BraceWrapping :
+    AfterClass : true
+    AfterControlStatement : true
+    AfterEnum : true
+    AfterFunction  : true
+    AfterNamespace : true
+    AfterStruct : true
+    AfterUnion : true
+    #AfterExternBlock : true
+    BeforeElse : true
+    BeforeCatch : true
+    SplitEmptyFunction : true
+    SplitEmptyNamespace : true
+
+
+BreakBeforeBinaryOperators : None
+BreakBeforeTernaryOperators : false
+BreakConstructorInitializers : BeforeColon
+ColumnLimit : 120
+CompactNamespaces : false
+ConstructorInitializerAllOnOneLineOrOnePerLine : true
+ConstructorInitializerIndentWidth : 4
+Cpp11BracedListStyle : true
+FixNamespaceComments : true
+#IncludeBlocks : Regroup
+IndentCaseLabels : true
+#IndentPPDirectives : AfterHash
+IndentWidth : 4
+IndentWrappedFunctionNames : true
+Language : Cpp
+NamespaceIndentation : All
+PointerAlignment : Left
+ReflowComments : true
+SortUsingDeclarations : true
+SpaceAfterCStyleCast : true
+SpaceAfterTemplateKeyword : true
+SpaceBeforeAssignmentOperators : true
+#SpaceBeforeCpp11BracedList : false
+SpaceBeforeParens : ControlStatements
+#SpaceBeforeRangeBasedForLoopColon : true
+SpaceInEmptyParentheses : false
+SpacesInAngles : false
+SpacesInCStyleCastParentheses : false
+SpacesInContainerLiterals : false
+SpacesInParentheses  : false
+SpacesInSquareBrackets : false
+Standard : Cpp11
+
+
