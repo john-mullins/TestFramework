@@ -197,11 +197,11 @@ namespace UnitTests
             print(std::cout, "\n");
             show_failures(errors, "Errors");
             show_failures(failures, "Failures");
-            print(std::cout, static_cast<int>(num_tests), " Tests.\n");
+            print(std::cout, num_tests, " Tests.\n");
             print(std::cout, 0, " Skipped.\n");
-            print(std::cout, static_cast<int>(failures.size()), " Failures.\n");
-            print(std::cout, static_cast<int>(errors.size()), " Errors.\n");
-            return static_cast<int>(failures.size());
+            print(std::cout, failures.size(), " Failures.\n");
+            print(std::cout, errors.size(), " Errors.\n");
+            return failures.size();
         }
 
     private:
