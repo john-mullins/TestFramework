@@ -27,16 +27,6 @@ TEST(const_char_array)
     ASSERT_EQUALS("Hello, World", ss.str());
 }
 
-#ifdef HAS_STRING_VIEW1
-TEST(string_view)
-{
-    auto              s{"Hello, World"sv};
-    std::stringstream ss;
-    ss << UnitTests::stream_any(s);
-    ASSERT_EQUALS("Hello, World", ss.str());
-}
-#endif
-
 TEST(integer)
 {
     auto              i = 0x7ff;
