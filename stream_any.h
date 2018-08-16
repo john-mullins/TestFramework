@@ -7,14 +7,8 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
-
-#ifdef __has_include             // Check if __has_include is present
-#if __has_include(<string_view>) // Check for a standard library
-#include <string_view>
-#define HAS_STRING_VIEW
-#endif
-#endif
 
 namespace UnitTests
 {
@@ -262,7 +256,7 @@ namespace UnitTests
             output(s, t, std::true_type{});
         }
 
-#ifdef HAS_STRING_VIEW
+#ifdef HAS_STRING_VIEW1
         inline void output_range_or_type(std::ostream& s, std::string_view t, const std::true_type& /*unused*/)
         {
             output(s, t, std::true_type{});
