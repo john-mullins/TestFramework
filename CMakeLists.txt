@@ -11,9 +11,15 @@ add_library(testframework INTERFACE)
 
 add_executable(testframework_tests)
 
-target_include_directories(testframework INTERFACE .)
+target_include_directories(testframework
+    INTERFACE
+        .
+)
 
-target_link_libraries(testframework_tests testframework)
+target_link_libraries(testframework_tests
+    PRIVATE
+        testframework
+)
 
 target_sources(testframework_tests
     PRIVATE

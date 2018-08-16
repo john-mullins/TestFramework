@@ -256,12 +256,6 @@ namespace UnitTests
             output(s, t, std::true_type{});
         }
 
-#ifdef HAS_STRING_VIEW1
-        inline void output_range_or_type(std::ostream& s, std::string_view t, const std::true_type& /*unused*/)
-        {
-            output(s, t, std::true_type{});
-        }
-#endif
         template <typename T>
         std::ostream& operator<<(std::ostream& s, const outputter<T>& t)
         { // this call here will dispatch to a function that streams or not depending on whether
