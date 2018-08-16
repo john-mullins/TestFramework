@@ -76,13 +76,16 @@ TEST(signed_long)
     ASSERT_EQUALS("734916370", ss.str());
 }
 
-class NonStreamableClass
+namespace test
 {
-};
+    class NonStreamableClass
+    {
+    };
+} // namespace test
 
 TEST(non_streamable)
 {
-    auto              s = NonStreamableClass{};
+    auto              s = test::NonStreamableClass{};
     std::stringstream ss;
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("nonstreamable", ss.str());
@@ -158,4 +161,25 @@ TEST(std_tuple)
     std::stringstream ss;
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("(7, Pieces of gold, 0x00000101)", ss.str());
+}
+
+namespace test
+{
+    class streamable_class
+    {
+    };
+
+    std::ostream& operator<<(std::ostream& s, const streamable_class& /*unused*/)
+    {
+        return s << "streamable";
+    }
+
+} // namespace test
+
+TEST(streamable)
+{
+    auto              s = test::streamable_class{};
+    std::stringstream ss;
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("streamable", ss.str());
 }
