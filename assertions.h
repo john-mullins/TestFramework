@@ -10,8 +10,6 @@
 #include <vector>
 
 using std::begin;
-using std::cbegin;
-using std::cend;
 using std::end;
 
 // use these macros to define your test conditions (they do as they say on the tin) :
@@ -66,7 +64,7 @@ using std::end;
     catch (const exception& e)                                                                       \
     {                                                                                                \
         using namespace std::literals;                                                               \
-        std::string what = e.what();                                                                 \
+        auto what = std::string{e.what()};                                                           \
         if (what.find(expectedmsg) == std::string::npos)                                             \
         {                                                                                            \
             FAIL((msg) +                                                                             \
@@ -202,7 +200,7 @@ namespace UnitTests
                     s << stream(msg) << " ";
 
                 s << std::boolalpha;
-                s << "Wasn't expecting to get <" << stream(static_cast<T>(actual)) << ">";
+                s << "Wasn't expecting to get <" << stream(std::common_type_t<T, U>(actual)) << ">";
                 Error(s.str());
             }
         }
@@ -234,9 +232,9 @@ namespace UnitTests
         template <typename Value, typename Container>
         void In(const std::string& msg, Value value, Container&& container) const
         {
-            if (std::find(cbegin(container), cend(container), value) == cend(container))
+            if (std::find(begin(container), end(container), value) == cend(container))
             {
-                ContainmentError(msg, "Expected container to contain", value, cbegin(container), cend(container));
+                ContainmentError(msg, "Expected container to contain", value, begin(container), end(container));
             }
         }
 
@@ -291,9 +289,9 @@ namespace UnitTests
         template <typename Value, typename Container>
         void NotIn(const std::string& msg, Value value, Container&& container) const
         {
-            if (std::find(cbegin(container), cend(container), value) != cend(container))
+            if (std::find(begin(container), end(container), value) != cend(container))
             {
-                ContainmentError(msg, "Did not expect container to contain", value, cbegin(container), cend(container));
+                ContainmentError(msg, "Did not expect container to contain", value, begin(container), end(container));
             }
         }
 
@@ -359,13 +357,13 @@ namespace UnitTests
         template <class ExpectedRange, class GotRange>
         void RangeEquals(const std::string& msg, ExpectedRange& expected, GotRange& got) const
         {
-            RangeEquals(msg, cbegin(expected), cend(expected), cbegin(got), cend(got));
+            RangeEquals(msg, begin(expected), end(expected), begin(got), end(got));
         }
 
         template <class ExpectedRange, class GotRange>
         void RangeEquals(ExpectedRange&& expected, GotRange&& got) const
         {
-            RangeEquals(std::string(), cbegin(expected), cend(expected), cbegin(got), cend(got));
+            RangeEquals(std::string(), begin(expected), end(expected), begin(got), end(got));
         }
 
         inline std::string spacer(const std::string& s, size_t width, char fillchar)
@@ -388,15 +386,15 @@ namespace UnitTests
         void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
         {
             auto width = std::max_element(
-                cbegin(expected), cend(expected), [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); })
+                begin(expected), end(expected), [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); })
                              ->size();
             auto e = std::vector<std::string>{};
             auto g = std::vector<std::string>{};
             e.reserve(expected.size());
             g.reserve(got.size());
             auto adjust = [&](const std::string& s1) { return ljust(s1, width, ' '); };
-            std::transform(cbegin(expected), cend(expected), std::back_inserter(e), adjust);
-            std::transform(cbegin(got), cend(got), std::back_inserter(g), adjust);
+            std::transform(begin(expected), end(expected), std::back_inserter(e), adjust);
+            std::transform(begin(got), end(got), std::back_inserter(g), adjust);
             RangeEquals(message, e, g);
         }
 
