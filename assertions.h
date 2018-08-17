@@ -141,16 +141,13 @@ namespace UnitTests
         auto n = 0U;
         while (first1 != last1 || first2 != last2)
         {
-            if (n != 0)
-            {
-                os << "\n";
-            }
             os << "\telement[" << n++ << "] = (";
             auto point_out_this_line = first1 == point_out;
-            first1                   = OutputElement(os, first1, last1);
+
+            first1 = OutputElement(os, first1, last1);
             os << ",";
             first2 = OutputElement(os, first2, last2);
-            os << (point_out_this_line ? ") <--------- HERE" : ")");
+            os << (point_out_this_line ? ") <--------- HERE\n" : ")\n");
         }
     }
 
@@ -438,6 +435,28 @@ namespace UnitTests
             MultiLineEquals(message, split(expected, "`n"), split(got, "\n"));
         }
 
+        template <typename iter>
+        class Range
+        {
+        public:
+            Range(iter begin, iter end) : m_begin(begin), m_end(end)
+            {
+            }
+
+            iter begin() const
+            {
+                return m_begin;
+            }
+            iter end() const
+            {
+                return m_end;
+            }
+
+        private:
+            iter m_begin;
+            iter m_end;
+        };
+
     private:
         [[noreturn]] void Error(const std::string& msg) const { throw TestFailure(msg, m_file, m_line); }
 
@@ -459,33 +478,6 @@ namespace UnitTests
             return results;
         }
 
-        template <class FwdIt>
-        void join(FwdIt begin, FwdIt end, const std::string& delim, std::ostream& stream) const
-        {
-            if (begin != end)
-            {
-                stream << *begin;
-                for (++begin; begin != end; ++begin)
-                {
-                    stream << delim << *begin;
-                }
-            }
-        }
-
-        template <class FwdIt>
-        std::string join(FwdIt begin, FwdIt end, const std::string& delim) const
-        {
-            auto stream = std::ostringstream{};
-            join(begin, end, delim, stream);
-            return stream.str();
-        }
-
-        template <class Range>
-        std::string join(Range range, const std::string& delim) const
-        {
-            return join(cbegin(range), cend(range), delim);
-        }
-
         template <typename Value, typename ContainerIterator>
         [[noreturn]] void ContainmentError(const std::string& msg, const std::string& msg2, Value value,
             ContainerIterator begin, ContainerIterator end) const {
@@ -496,7 +488,7 @@ namespace UnitTests
             s << msg2 << " ";
             s << stream(value);
             s << ", actual contents :\n\t";
-            join(begin, end, "\n\t", s);
+            s << stream_any(Range(begin, end));
             s << "\n";
             Error(s.str());
         }
