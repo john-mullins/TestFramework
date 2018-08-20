@@ -239,7 +239,7 @@ namespace UnitTests
             {
                 auto first = begin(t);
                 s << stream_any(*first++);
-                std::for_each(first, end(t), [&s](auto value) { s << ", " << stream_any(value); });
+                std::for_each(first, end(t), [&s](const auto& value) { s << ", " << stream_any(value); });
             }
             s << "]";
         }

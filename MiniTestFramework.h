@@ -147,7 +147,7 @@ namespace UnitTests
 
         bool IsVerbose(const std::vector<std::string>& args)
         {
-            return std::any_of(begin(args), end(args), [](auto s) { return s == "-v" || s == "--verbose"; });
+            return std::any_of(begin(args), end(args), [](const auto& s) { return s == "-v" || s == "--verbose"; });
         }
 
         void show_failures(const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)

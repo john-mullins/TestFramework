@@ -314,12 +314,9 @@ namespace UnitTests
             }
         }
 
-        [[noreturn]] void Fail() const { Fail("Test FAIL'ed"); }
+        [[noreturn]] void Fail() const { Fail("Test FAIL'ed"); };
 
-            [[noreturn]] void Fail(const std::string& msg) const
-        {
-            Error(msg);
-        }
+        [[noreturn]] void Fail(const std::string& msg) const { Error(msg); }
 
         void LargeStringEquals(const std::string& msg, const std::string& expected, const std::string& actual);
 
@@ -388,13 +385,11 @@ namespace UnitTests
             auto width = std::max_element(
                 begin(expected), end(expected), [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); })
                              ->size();
-            auto e = std::vector<std::string>{};
-            auto g = std::vector<std::string>{};
-            e.reserve(expected.size());
-            g.reserve(got.size());
+            auto e      = std::move(expected);
+            auto g      = std::move(got);
             auto adjust = [&](const std::string& s1) { return ljust(s1, width, ' '); };
-            std::transform(begin(expected), end(expected), std::back_inserter(e), adjust);
-            std::transform(begin(got), end(got), std::back_inserter(g), adjust);
+            std::transform(begin(expected), end(expected), begin(expected), adjust);
+            std::transform(begin(got), end(got), begin(got), adjust);
             RangeEquals(message, e, g);
         }
 
