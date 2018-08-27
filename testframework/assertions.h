@@ -232,7 +232,8 @@ namespace UnitTests
         template <typename Value, typename Container>
         void In(const std::string& msg, Value value, Container&& container) const
         {
-            if (std::find(begin(container), end(container), value) == end(container))
+            if (std::none_of(begin(container), end(container), value))
+            // if (std::find(begin(container), end(container), value) == end(container))
             {
                 ContainmentError(msg, "Expected container to contain", value, begin(container), end(container));
             }
@@ -289,7 +290,7 @@ namespace UnitTests
         template <typename Value, typename Container>
         void NotIn(const std::string& msg, Value value, Container&& container) const
         {
-            if (std::find(begin(container), end(container), value) != end(container))
+            if (std::any_of(begin(container), end(container), value))
             {
                 ContainmentError(msg, "Did not expect container to contain", value, begin(container), end(container));
             }
