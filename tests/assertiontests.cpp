@@ -130,7 +130,7 @@ TEST(not_equals1_msg)
         std::string expected = "error A1000: Assertion failure : Extra message Wasn't expecting to get <1>";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Unexpected message from failing ASSERT_EQUALS", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from failing ASSERT_NOT_EQUALS", __FILE__, __LINE__);
         }
     }
 }
@@ -208,7 +208,7 @@ TEST(assert_false1)
         std::string expected = "error A1000: Assertion failure :  Expression evaluated to true";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Unexpected message from ASSERT_TRUE", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_FALSE", __FILE__, __LINE__);
         }
     }
 }
@@ -226,7 +226,7 @@ TEST(assert_false_msg)
         std::string expected = "error A1000: Assertion failure : More Info Expression evaluated to true";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Unexpected message from ASSERT_TRUE", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_FALSE", __FILE__, __LINE__);
         }
     }
 }
@@ -259,7 +259,7 @@ TEST(assert_in1)
                                "\t[0, 1, 2, 3]";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Unexpected message from ASSERT_TRUE", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_IN", __FILE__, __LINE__);
         }
     }
 }
@@ -280,7 +280,62 @@ TEST(assert_in_msg)
             "\t[0, 1, 2, 3]";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Unexpected message from ASSERT_TRUE", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_IN", __FILE__, __LINE__);
+        }
+    }
+}
+
+TEST(assert_not_in)
+{
+    try
+    {
+        std::vector<int> v{0, 1, 2, 3};
+        ASSERT_NOT_IN(10, v);
+    }
+    catch (UnitTests::TestFailure& e)
+    {
+        FAIL("ASSERT_NOT_IN should not have fired here.");
+    }
+}
+
+TEST(assert_not_in1)
+{
+    try
+    {
+        std::vector<int> v{0, 1, 2, 3};
+        ASSERT_NOT_IN(3, v);
+        FAIL("ASSERT_NOT_IN should have fired here.");
+    }
+    catch (UnitTests::TestFailure& e)
+    {
+        std::string msg = e.what();
+        std::string expected =
+            "error A1000: Assertion failure : Did not expect container to contain 3, actual contents :\n"
+            "\t[0, 1, 2, 3]";
+        if (msg.find(expected) == std::string::npos)
+        {
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_NOT_IN", __FILE__, __LINE__);
+        }
+    }
+}
+
+TEST(assert_not_in_msg)
+{
+    try
+    {
+        std::vector<int> v{0, 1, 2, 3};
+        ASSERT_NOT_IN("More Info", 3, v);
+        FAIL("ASSERT_NOT_IN should have fired here.");
+    }
+    catch (UnitTests::TestFailure& e)
+    {
+        std::string msg = e.what();
+        std::string expected =
+            "error A1000: Assertion failure : More Info. Did not expect container to contain 3, actual contents :\n"
+            "\t[0, 1, 2, 3]";
+        if (msg.find(expected) == std::string::npos)
+        {
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_NOT_IN", __FILE__, __LINE__);
         }
     }
 }
