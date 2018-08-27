@@ -44,7 +44,7 @@ TEST(equals)
     }
     catch (UnitTests::TestFailure& e)
     {
-        FAIL();
+        FAIL("ASSERT_EQUALS should not have fired.");
     }
 }
 
@@ -53,7 +53,7 @@ TEST(equals1)
     try
     {
         ASSERT_EQUALS("Hello", "World");
-        FAIL();
+        FAIL("ASSERT_EQUALS should have fired here.");
     }
     catch (UnitTests::TestFailure& e)
     {
@@ -61,11 +61,10 @@ TEST(equals1)
         std::string expected =
             "error A1000: Assertion failure : \n    Expected <Hello (uncoerced=Hello)>\n     but got "
             "<World (uncoerced=World)>";
-        // std::cout << "\n" << msg << "\n" << expected << "\n";
 
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Fail failed", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from failing ASSERT_EQUALS", __FILE__, __LINE__);
         }
     }
 }
@@ -75,7 +74,7 @@ TEST(equals_msg)
     try
     {
         ASSERT_EQUALS("Message", "Hello"s, "World"s);
-        FAIL();
+        FAIL("ASSERT_EQUALS should have fired here.");
     }
     catch (UnitTests::TestFailure& e)
     {
@@ -83,7 +82,7 @@ TEST(equals_msg)
         std::string expected = "error A1000: Assertion failure : Message \n    Expected <Hello>\n     but got <World>";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Fail failed", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from failing ASSERT_EQUALS", __FILE__, __LINE__);
         }
     }
 }
@@ -96,7 +95,7 @@ TEST(not_equals)
     }
     catch (UnitTests::TestFailure& e)
     {
-        FAIL();
+        FAIL("ASSERT_NOT_EQUALS should not have fired here.");
     }
 }
 
@@ -105,7 +104,7 @@ TEST(not_equals1)
     try
     {
         ASSERT_NOT_EQUALS(1, 1);
-        FAIL();
+        FAIL("ASSERT_NOT_EQUALS should have fired here.");
     }
     catch (UnitTests::TestFailure& e)
     {
@@ -113,11 +112,10 @@ TEST(not_equals1)
         std::string expected = "error A1000: Assertion failure : Wasn't expecting to get <1>";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Fail failed", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_NOT_EQUALS", __FILE__, __LINE__);
         }
     }
 }
-
 TEST(not_equals1_msg)
 {
     try
@@ -131,7 +129,7 @@ TEST(not_equals1_msg)
         std::string expected = "error A1000: Assertion failure : Extra message Wasn't expecting to get <1>";
         if (msg.find(expected) == std::string::npos)
         {
-            throw UnitTests::TestFailure("Fail failed", __FILE__, __LINE__);
+            throw UnitTests::TestFailure("Unexpected message from failing ASSERT_EQUALS", __FILE__, __LINE__);
         }
     }
 }
