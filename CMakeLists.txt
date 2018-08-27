@@ -22,7 +22,8 @@ install(TARGETS testframework
 
 install(EXPORT testframework_lib
     FILE testframework_lib.cmake
-    DESTINATION lib/cmake/testframework)
+    DESTINATION lib/cmake/testframework
+)
 
 
 include(CMakePackageConfigHelpers)
@@ -38,8 +39,14 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfigVersion.cmake"
         DESTINATION lib/cmake/testframework
 )
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/testframework
-    DESTINATION .
+install(FILES
+        ${PROJECT_SOURCE_DIR}/testframework/MiniTestFramework.h
+        ${PROJECT_SOURCE_DIR}/testframework/assertions.h
+        ${PROJECT_SOURCE_DIR}/testframework/stream_any.h
+        ${PROJECT_SOURCE_DIR}/testframework/testfailure.h
+        ${PROJECT_SOURCE_DIR}/testframework/streamfortestoutput.h
+        ${PROJECT_SOURCE_DIR}/testframework/TestHelpers.h
+    DESTINATION testframework
 )
 
 configure_package_config_file(
@@ -59,6 +66,8 @@ target_sources(testframework_tests
     PRIVATE
         tests/main.cpp
         tests/stream_any_tests.cpp
+        tests/testfailuretests.cpp
+        tests/assertiontests.cpp
 
         testframework/MiniTestFramework.h
         testframework/assertions.h
