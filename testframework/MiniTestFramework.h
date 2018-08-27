@@ -131,7 +131,6 @@ namespace UnitTests
         template <class Container, class Function>
         size_t AddParamTest(const Container& cont, const Function& fn, const char* name, const char* file, int line)
         {
-            // auto test = std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line);
             auto test = std::unique_ptr<Test>(
                 std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
             return AddTest(std::move(test));
@@ -150,19 +149,20 @@ namespace UnitTests
             return std::any_of(begin(args), end(args), [](const auto& s) { return s == "-v" || s == "--verbose"; });
         }
 
-        void show_failures(const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)
+        void show_failures(
+            std::ostream& os, const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)
         {
             if (!failures.empty())
             {
-                print(std::cout, type, " :-\n");
+                print(os, type, " :-\n");
                 for (auto& failure : failures)
                 {
-                    print(std::cout, failure.second, " while testing TEST(", failure.first, ")\n");
+                    print(os, failure.second, " while testing TEST(", failure.first, ")\n");
                 }
             }
         }
 
-        int RunTests(const std::vector<std::string>& args)
+        int RunTests(const std::vector<std::string>& args, std::ostream& os)
         {
             auto verbose   = IsVerbose(args);
             auto failures  = std::vector<std::pair<std::string, std::string>>{};
@@ -175,33 +175,33 @@ namespace UnitTests
                     auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
                     if (verbose)
                     {
-                        print(std::cout, "Running ", test->BareName(indexs), " ");
+                        print(os, "Running ", test->BareName(indexs), " ");
                     }
                     try
                     {
                         ++num_tests;
                         test->Run(index);
-                        print(std::cout, !verbose ? "." : "OK\n");
+                        print(os, !verbose ? "." : "OK\n");
                     }
                     catch (TestFailure& e)
                     {
                         failures.emplace_back(test->Name(indexs), e.what());
-                        print(std::cout, !verbose ? "F" : "FAIL\n");
+                        print(os, !verbose ? "F" : "FAIL\n");
                     }
                     catch (const std::exception& e)
                     {
                         errors.emplace_back(test->Name(indexs), e.what());
-                        print(std::cout, !verbose ? "E" : "EXCEPTION\n");
+                        print(os, !verbose ? "E" : "EXCEPTION\n");
                     }
                 }
             }
-            print(std::cout, "\n");
-            show_failures(errors, "Errors");
-            show_failures(failures, "Failures");
-            print(std::cout, num_tests, " Tests.\n");
-            print(std::cout, 0, " Skipped.\n");
-            print(std::cout, failures.size(), " Failures.\n");
-            print(std::cout, errors.size(), " Errors.\n");
+            print(os, "\n");
+            show_failures(os, errors, "Errors");
+            show_failures(os, failures, "Failures");
+            print(os, num_tests, " Tests.\n");
+            print(os, 0, " Skipped.\n");
+            print(os, failures.size(), " Failures.\n");
+            print(os, errors.size(), " Errors.\n");
             return failures.size();
         }
 
@@ -244,6 +244,7 @@ namespace UnitTests
         static UnitTests::MiniSuite runner;                                          \
         return runner;                                                               \
     }                                                                                \
+                                                                                     \
     std::string UnitTests::FormatError(const std::string& file, int line, int error) \
     {                                                                                \
         auto msg = file;                                                             \
@@ -251,12 +252,13 @@ namespace UnitTests
         msg += " : error A" + std::to_string(error) + ": ";                          \
         return msg;                                                                  \
     }                                                                                \
+                                                                                     \
     int main(int argc, char** argv)                                                  \
     {                                                                                \
         auto end_argv = argv;                                                        \
         std::advance(end_argv, argc);                                                \
         auto args = std::vector<std::string>(argv, end_argv);                        \
-        return UnitTests::MiniSuite::Instance().RunTests(args);                      \
+        return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);           \
     }                                                                                \
     /**/
 
