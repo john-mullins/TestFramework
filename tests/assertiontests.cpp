@@ -1,5 +1,8 @@
 #include "testframework/MiniTestFramework.h"
 
+#include <deque>
+#include <list>
+
 using namespace std::literals;
 
 TEST(fail)
@@ -336,6 +339,71 @@ TEST(assert_not_in_msg)
         if (msg.find(expected) == std::string::npos)
         {
             throw UnitTests::TestFailure("Unexpected message from ASSERT_NOT_IN", __FILE__, __LINE__);
+        }
+    }
+}
+
+TEST(assert_range_equals)
+{
+    try
+    {
+        std::vector<int> v{0, 1, 2, 3};
+        std::list<long>  li{0, 1, 2, 3};
+        ASSERT_RANGE_EQUALS(li, v);
+    }
+    catch (UnitTests::TestFailure& e)
+    {
+        FAIL("ASSERT_RANGE_EQUALS should not have fired here.");
+    }
+}
+
+TEST(assert_range_equals1)
+{
+    try
+    {
+        std::vector<int> v{0, 1, 2, 3};
+        std::deque<long> li{0, 1, 2, 4};
+        ASSERT_RANGE_EQUALS(li, v);
+    }
+    catch (UnitTests::TestFailure& e)
+    {
+        std::string msg = e.what();
+
+        std::string expected = "error A1000: Assertion failure : Expected range [4] different to actual range [4]\n"
+                               "\telement[0] = (0,0)\n"
+                               "\telement[1] = (1,1)\n"
+                               "\telement[2] = (2,2)\n"
+                               "\telement[3] = (4,3) <--------- HERE\n";
+
+        if (msg.find(expected) == std::string::npos)
+        {
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_RANGE_EQUALS", __FILE__, __LINE__);
+        }
+    }
+}
+
+TEST(assert_range_equals_msg)
+{
+    try
+    {
+        std::vector<int> v{0, 1, 2, 3};
+        std::deque<long> li{0, 3, 2, 3};
+        ASSERT_RANGE_EQUALS("Message.", li, v);
+    }
+    catch (UnitTests::TestFailure& e)
+    {
+        std::string msg = e.what();
+
+        std::string expected =
+            "error A1000: Assertion failure : Message. Expected range [4] different to actual range [4]\n"
+            "\telement[0] = (0,0)\n"
+            "\telement[1] = (3,1) <--------- HERE\n"
+            "\telement[2] = (2,2)\n"
+            "\telement[3] = (3,3)\n";
+
+        if (msg.find(expected) == std::string::npos)
+        {
+            throw UnitTests::TestFailure("Unexpected message from ASSERT_RANGE_EQUALS", __FILE__, __LINE__);
         }
     }
 }
