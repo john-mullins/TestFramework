@@ -8,6 +8,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set(Upstream_VERSION 1.0)
 
 add_library(testframework INTERFACE)
+add_library(testframework::testframework ALIAS testframework)
 
 target_include_directories(testframework
     INTERFACE
@@ -22,6 +23,7 @@ install(TARGETS testframework
 
 install(EXPORT testframework_lib
     FILE testframework_lib.cmake
+    NAMESPACE testframework::
     DESTINATION lib/cmake/testframework
 )
 
@@ -59,7 +61,7 @@ add_executable(testframework_tests)
 
 target_link_libraries(testframework_tests
     PRIVATE
-        testframework
+        testframework::testframework
 )
 
 target_sources(testframework_tests
