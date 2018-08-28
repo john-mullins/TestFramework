@@ -18,8 +18,9 @@ namespace UnitTests
     class TestFailure : public std::exception
     {
     public:
-        TestFailure(std::string msg, std::string file, int line, const std::string& failure_type, int error_code)
-            : m_what(FormatError(std::move(file), line, error_code) + failure_type + msg), m_msg(std::move(msg))
+        TestFailure(std::string msg, std::string file, int line, std::string failure_type, int error_code)
+            : m_what(FormatError(std::move(file), line, error_code) + std::move(failure_type) + std::move(msg)),
+              m_msg(std::move(msg))
         {
         }
 
