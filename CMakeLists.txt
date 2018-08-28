@@ -40,12 +40,12 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfigVersion.cmake"
 )
 
 install(FILES
-        ${PROJECT_SOURCE_DIR}/testframework/MiniTestFramework.h
-        ${PROJECT_SOURCE_DIR}/testframework/assertions.h
-        ${PROJECT_SOURCE_DIR}/testframework/stream_any.h
-        ${PROJECT_SOURCE_DIR}/testframework/testfailure.h
-        ${PROJECT_SOURCE_DIR}/testframework/streamfortestoutput.h
-        ${PROJECT_SOURCE_DIR}/testframework/TestHelpers.h
+        testframework/MiniTestFramework.h
+        testframework/assertions.h
+        testframework/stream_any.h
+        testframework/testfailure.h
+        testframework/streamfortestoutput.h
+        testframework/TestHelpers.h
     DESTINATION testframework
 )
 
