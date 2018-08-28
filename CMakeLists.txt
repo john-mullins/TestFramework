@@ -50,7 +50,7 @@ install(FILES
 )
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfig.cmake.in"
+    "cmake/testframeworkConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfig.cmake"
     INSTALL_DESTINATION lib/cmake/testframework
 )
