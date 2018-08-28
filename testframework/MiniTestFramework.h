@@ -106,8 +106,7 @@ namespace UnitTests
 
             void Run(int index) const override
             {
-                auto arg = m_cont.begin();
-                std::advance(arg, index);
+                auto arg = std::next(m_cont.begin(), index);
                 m_fn(*arg);
             }
 
@@ -253,9 +252,8 @@ namespace UnitTests
                                                                               \
     int main(int argc, char** argv)                                           \
     {                                                                         \
-        auto end_argv = argv;                                                 \
-        std::advance(end_argv, argc);                                         \
-        auto args = std::vector<std::string>(argv, end_argv);                 \
+        auto end_argv = std::next(argv, argc);                                \
+        auto args     = std::vector<std::string>(argv, end_argv);             \
         return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);    \
     }                                                                         \
     /**/
