@@ -182,3 +182,19 @@ TEST(streamable)
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("streamable", ss.str());
 }
+
+TEST(array)
+{
+    int  s[]{0, 1, 2, 156};
+    auto ss = std::stringstream{};
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("[0, 1, 2, 156]", ss.str());
+}
+
+TEST(array_uc)
+{
+    unsigned char s[]{0, 1, 2, 156};
+    auto          ss = std::stringstream{};
+    ss << UnitTests::stream_any(s);
+    ASSERT_EQUALS("[0x00, 0x01, 0x02, 0x9c]", ss.str());
+}
