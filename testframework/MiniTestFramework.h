@@ -155,10 +155,8 @@ namespace UnitTests
             if (!failures.empty())
             {
                 print(os, type, " :-\n");
-                for (auto& failure : failures)
-                {
-                    print(os, failure.second, " while testing TEST(", failure.first, ")\n");
-                }
+                std::for_each(begin(failures), end(failures),
+                    [&](auto f) { print(os, f.second, " while testing TEST(", f.first, ")\n"); });
             }
         }
 
@@ -238,28 +236,28 @@ namespace UnitTests
     template <typename T>                                                                               \
     void name::operator()(const T& args) const /**/
 
-#define TEST_MAIN()                                                                  \
-    UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                           \
-    {                                                                                \
-        static UnitTests::MiniSuite runner;                                          \
-        return runner;                                                               \
-    }                                                                                \
-                                                                                     \
-    std::string UnitTests::FormatError(const std::string& file, int line, int error) \
-    {                                                                                \
-        auto msg = file;                                                             \
-        msg += "(" + std::to_string(line) + ")";                                     \
-        msg += " : error A" + std::to_string(error) + ": ";                          \
-        return msg;                                                                  \
-    }                                                                                \
-                                                                                     \
-    int main(int argc, char** argv)                                                  \
-    {                                                                                \
-        auto end_argv = argv;                                                        \
-        std::advance(end_argv, argc);                                                \
-        auto args = std::vector<std::string>(argv, end_argv);                        \
-        return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);           \
-    }                                                                                \
+#define TEST_MAIN()                                                           \
+    UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                    \
+    {                                                                         \
+        static UnitTests::MiniSuite runner;                                   \
+        return runner;                                                        \
+    }                                                                         \
+                                                                              \
+    std::string UnitTests::FormatError(std::string file, int line, int error) \
+    {                                                                         \
+        auto msg(std::move(file));                                            \
+        msg += "(" + std::to_string(line) + ")";                              \
+        msg += " : error A" + std::to_string(error) + ": ";                   \
+        return msg;                                                           \
+    }                                                                         \
+                                                                              \
+    int main(int argc, char** argv)                                           \
+    {                                                                         \
+        auto end_argv = argv;                                                 \
+        std::advance(end_argv, argc);                                         \
+        auto args = std::vector<std::string>(argv, end_argv);                 \
+        return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);    \
+    }                                                                         \
     /**/
 
 } // namespace UnitTests

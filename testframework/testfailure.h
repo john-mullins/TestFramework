@@ -5,8 +5,7 @@
 
 namespace UnitTests
 {
-    std::string FormatError(const std::string& file, int line, int error);
-    std::string FormatError(const std::string& file, const std::string& line, int error);
+    std::string FormatError(std::string file, int line, int error);
 
     enum
     {
@@ -19,14 +18,13 @@ namespace UnitTests
     class TestFailure : public std::exception
     {
     public:
-        TestFailure(
-            const std::string& msg, const std::string& file, int line, const std::string& failure_type, int error_code)
-            : m_what(FormatError(file, line, error_code) + failure_type + msg), m_msg(msg)
+        TestFailure(std::string msg, std::string file, int line, const std::string& failure_type, int error_code)
+            : m_what(FormatError(std::move(file), line, error_code) + failure_type + msg), m_msg(std::move(msg))
         {
         }
 
-        TestFailure(const std::string& msg, const std::string& file, int line)
-            : TestFailure(msg, file, line, "Assertion failure : ", AssertionFailure)
+        TestFailure(std::string msg, std::string file, int line)
+            : TestFailure(std::move(msg), std::move(file), line, "Assertion failure : ", AssertionFailure)
         {
         }
 
@@ -49,8 +47,8 @@ namespace UnitTests
     class TestTimeout : public TestFailure
     {
     public:
-        TestTimeout(const std::string& msg, const std::string& file, int line)
-            : TestFailure(msg, file, line, "Test timeout : ", TimeoutFailure)
+        TestTimeout(std::string msg, std::string file, int line)
+            : TestFailure(std::move(msg), std::move(file), line, "Test timeout : ", TimeoutFailure)
         {
         }
     };
