@@ -128,7 +128,7 @@ namespace UnitTests
         }
 
         template <class Container, class Function>
-        size_t AddParamTest(const Container& cont, const Function& fn, const char* name, const char* file, int line)
+        size_t AddParamTest(const Container& cont, Function fn, const char* name, const char* file, int line)
         {
             auto test = std::unique_ptr<Test>(
                 std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
@@ -136,7 +136,7 @@ namespace UnitTests
         }
 
         template <typename T, size_t N, class Function>
-        size_t AddParamTest(const T (&data)[N], const Function& fn, const char* name, const char* file, int line)
+        size_t AddParamTest(const T (&data)[N], Function fn, const char* name, const char* file, int line)
         {
             using std::begin;
             using std::end;
@@ -199,7 +199,7 @@ namespace UnitTests
             print(os, 0, " Skipped.\n");
             print(os, failures.size(), " Failures.\n");
             print(os, errors.size(), " Errors.\n");
-            return failures.size();
+            return static_cast<int>(failures.size());
         }
 
     private:
@@ -234,6 +234,31 @@ namespace UnitTests
     }                                                                                                   \
     template <typename T>                                                                               \
     void name::operator()(const T& args) const /**/
+
+#define ADD_TESTS(name, data)          \
+    const size_t ignore_this_warning = \
+        UnitTests::MiniSuite::Instance().AddParamTest(data, name, #name, __FILE__, __LINE__);
+
+#define TEST_INITIALIZER(name)                               \
+    struct name                                              \
+    {                                                        \
+        template <typename T>                                \
+        void operator()(T) const;                            \
+    };                                                       \
+    namespace                                                \
+    {                                                        \
+        namespace PP_CAT(unique, __LINE__)                   \
+        {                                                    \
+            inline size_t initialize()                       \
+            {                                                \
+                name()(1);                                   \
+                return 0;                                    \
+            }                                                \
+            const size_t ignore_this_warning = initialize(); \
+        }                                                    \
+    }                                                        \
+    template <typename T>                                    \
+    void name::operator()(T) const
 
 #define TEST_MAIN()                                                           \
     UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                    \
