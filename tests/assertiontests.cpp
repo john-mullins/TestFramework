@@ -45,7 +45,7 @@ TEST(equals)
     {
         ASSERT_EQUALS(1, 1);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_EQUALS should not have fired.");
     }
@@ -96,7 +96,7 @@ TEST(not_equals)
     {
         ASSERT_NOT_EQUALS(1, 2);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_NOT_EQUALS should not have fired here.");
     }
@@ -144,7 +144,7 @@ TEST(assert_true)
     {
         ASSERT_TRUE(1 == 1);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_TRUE should not have fired here.");
     }
@@ -192,7 +192,7 @@ TEST(assert_false)
     {
         ASSERT_FALSE(1 == 2);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_FALSE should not have fired here.");
     }
@@ -241,7 +241,7 @@ TEST(assert_in)
         std::vector<int> v{0, 1, 2, 3};
         ASSERT_IN(1, v);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_IN should not have fired here.");
     }
@@ -295,7 +295,7 @@ TEST(assert_not_in)
         std::vector<int> v{0, 1, 2, 3};
         ASSERT_NOT_IN(10, v);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_NOT_IN should not have fired here.");
     }
@@ -351,7 +351,7 @@ TEST(assert_range_equals)
         std::list<long>  li{0, 1, 2, 3};
         ASSERT_RANGE_EQUALS(li, v);
     }
-    catch (UnitTests::TestFailure& e)
+    catch (UnitTests::TestFailure&)
     {
         FAIL("ASSERT_RANGE_EQUALS should not have fired here.");
     }
