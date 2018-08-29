@@ -4,6 +4,7 @@
 #include "streamfortestoutput.h"
 #include "testfailure.h"
 #include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <sstream>
