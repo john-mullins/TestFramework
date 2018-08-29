@@ -79,6 +79,7 @@ namespace UnitTests
             {
                 m_fn();
             }
+
             int NumTests() const override
             {
                 return 1;
@@ -235,9 +236,7 @@ namespace UnitTests
     template <typename T>                                                                               \
     void name::operator()(const T& args) const /**/
 
-#define ADD_TESTS(name, data)          \
-    const size_t ignore_this_warning = \
-        UnitTests::MiniSuite::Instance().AddParamTest(data, name, #name, __FILE__, __LINE__);
+#define ADD_TESTS(name, data) UnitTests::MiniSuite::Instance().AddParamTest(data, name, #name, __FILE__, __LINE__);
 
 #define TEST_INITIALIZER(name)                               \
     struct name                                              \
