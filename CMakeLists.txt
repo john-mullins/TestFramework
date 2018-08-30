@@ -16,13 +16,15 @@ target_include_directories(testframework
         $<INSTALL_INTERFACE:.>
 )
 
+set(TARGETS_EXPORT_NAME "${PROJECT_NAME}_lib")
+
 install(TARGETS testframework
-    EXPORT testframework_lib
+    EXPORT ${TARGETS_EXPORT_NAME}
         INCLUDES DESTINATION .
 )
 
-install(EXPORT testframework_lib
-    FILE testframework_lib.cmake
+install(EXPORT ${TARGETS_EXPORT_NAME}
+    FILE ${TARGETS_EXPORT_NAME}.cmake
     NAMESPACE testframework::
     DESTINATION lib/cmake/testframework
 )
