@@ -26,7 +26,7 @@ install(TARGETS testframework
 install(EXPORT ${TARGETS_EXPORT_NAME}
     FILE ${TARGETS_EXPORT_NAME}.cmake
     NAMESPACE testframework::
-    DESTINATION lib/cmake/testframework
+    DESTINATION cmake/testframework
 )
 
 
@@ -40,30 +40,34 @@ write_basic_package_version_file(
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfigVersion.cmake"
               "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfig.cmake"
-        DESTINATION lib/cmake/testframework
+        DESTINATION cmake/testframework
 )
 
-install(FILES
+set(HDR_FILES
         testframework/MiniTestFramework.h
         testframework/assertions.h
         testframework/stream_any.h
         testframework/testfailure.h
         testframework/streamfortestoutput.h
         testframework/TestHelpers.h
+)
+
+install(FILES
+    ${HDR_FILES}
     DESTINATION testframework
 )
 
 configure_package_config_file(
     "cmake/testframeworkConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/testframeworkConfig.cmake"
-    INSTALL_DESTINATION lib/cmake/testframework
+    INSTALL_DESTINATION cmake/testframework
 )
 
 add_executable(testframework_tests)
 
 target_link_libraries(testframework_tests
     PRIVATE
-        testframework::testframework
+        testframework
 )
 
 target_sources(testframework_tests
@@ -73,10 +77,5 @@ target_sources(testframework_tests
         tests/testfailuretests.cpp
         tests/assertiontests.cpp
 
-        testframework/MiniTestFramework.h
-        testframework/assertions.h
-        testframework/stream_any.h
-        testframework/testfailure.h
-        testframework/streamfortestoutput.h
-        testframework/TestHelpers.h
+    ${HDR_FILES}
 )
