@@ -33,6 +33,17 @@ namespace UnitTests
         return print(s, args...);
     }
 
+    template <typename... Types>
+    struct typelist
+    {
+    };
+
+    template <typename T, typename... Args>
+    std::unique_ptr<T> make_unique(Args&&... args)
+    {
+        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
+
     class MiniSuite
     {
     public:
@@ -67,10 +78,11 @@ namespace UnitTests
             int         m_line;
         };
 
+        template <class Function>
         class FunctionTest : public Test
         {
         public:
-            FunctionTest(void (*fn)(), std::string name, const char* file, int line)
+            FunctionTest(Function fn, std::string name, const char* file, int line)
                 : Test(std::move(name), file, line), m_fn(fn)
             {
             }
@@ -86,7 +98,7 @@ namespace UnitTests
             }
 
         private:
-            void (*m_fn)();
+            Function m_fn;
         };
 
         template <class Container, class Function>
@@ -122,9 +134,10 @@ namespace UnitTests
             return 0;
         }
 
-        size_t AddTest(void (*fn)(), const char* name, const char* file, int line)
+        template <class Function>
+        size_t AddTest(Function fn, const char* name, const char* file, int line)
         {
-            auto test = std::unique_ptr<Test>(std::make_unique<FunctionTest>(fn, name, file, line));
+            auto test = std::unique_ptr<Test>(UnitTests::make_unique<FunctionTest<Function>>(fn, name, file, line));
             return AddTest(std::move(test));
         }
 
@@ -132,7 +145,7 @@ namespace UnitTests
         size_t AddParamTest(const Container& cont, Function fn, const char* name, const char* file, int line)
         {
             auto test = std::unique_ptr<Test>(
-                std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
+                UnitTests::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
             return AddTest(std::move(test));
         }
 
@@ -219,6 +232,51 @@ namespace UnitTests
     }                                                                                      \
     void name() /**/
 
+#define TEST_T(name, list_of_types)                                                                        \
+    template <typename test_type>                                                                          \
+    struct name                                                                                            \
+    {                                                                                                      \
+        void operator()() const;                                                                           \
+    };                                                                                                     \
+    namespace                                                                                              \
+    {                                                                                                      \
+        namespace PP_CAT(unique, __LINE__)                                                                 \
+        {                                                                                                  \
+            template <typename... T>                                                                       \
+            struct expander;                                                                               \
+                                                                                                           \
+            template <typename T>                                                                          \
+            struct expander<T>                                                                             \
+            {                                                                                              \
+                int operator()() const                                                                     \
+                {                                                                                          \
+                    return UnitTests::MiniSuite::Instance().AddTest(name<T>(), #name, __FILE__, __LINE__); \
+                }                                                                                          \
+            };                                                                                             \
+                                                                                                           \
+            template <typename T, typename... Args>                                                        \
+            struct expander<T, Args...>                                                                    \
+            {                                                                                              \
+                int operator()() const                                                                     \
+                {                                                                                          \
+                    return expander<T>()(), expander<Args...>()();                                         \
+                }                                                                                          \
+            };                                                                                             \
+                                                                                                           \
+            template <typename... Args>                                                                    \
+            struct expander<UnitTests::typelist<Args...>>                                                  \
+            {                                                                                              \
+                int operator()() const                                                                     \
+                {                                                                                          \
+                    return expander<Args...>()();                                                          \
+                }                                                                                          \
+            };                                                                                             \
+            const size_t ignore_this_warning = expander<list_of_types>()();                                \
+        }                                                                                                  \
+    }                                                                                                      \
+    template <typename test_type>                                                                          \
+    void name<test_type>::operator()() const /**/
+
 #define PARAM_TEST(name, data)                                                                          \
     struct name                                                                                         \
     {                                                                                                   \
@@ -235,6 +293,53 @@ namespace UnitTests
     }                                                                                                   \
     template <typename T>                                                                               \
     void name::operator()(const T& args) const /**/
+
+#define PARAM_TEST_T(name, data, list_of_types)                                                                       \
+    template <typename U>                                                                                             \
+    struct name                                                                                                       \
+    {                                                                                                                 \
+        template <typename T>                                                                                         \
+        void operator()(const T& args) const;                                                                         \
+    };                                                                                                                \
+    namespace                                                                                                         \
+    {                                                                                                                 \
+        namespace PP_CAT(unique, __LINE__)                                                                            \
+        {                                                                                                             \
+            template <typename... T>                                                                                  \
+            struct expander;                                                                                          \
+                                                                                                                      \
+            template <typename T>                                                                                     \
+            struct expander<T>                                                                                        \
+            {                                                                                                         \
+                int operator()() const                                                                                \
+                {                                                                                                     \
+                    return UnitTests::MiniSuite::Instance().AddParamTest(data, name<T>(), #name, __FILE__, __LINE__); \
+                }                                                                                                     \
+            };                                                                                                        \
+                                                                                                                      \
+            template <typename T, typename... Args>                                                                   \
+            struct expander<T, Args...>                                                                               \
+            {                                                                                                         \
+                int operator()() const                                                                                \
+                {                                                                                                     \
+                    return expander<T>()(), expander<Args...>()();                                                    \
+                }                                                                                                     \
+            };                                                                                                        \
+                                                                                                                      \
+            template <typename... Args>                                                                               \
+            struct expander<UnitTests::typelist<Args...>>                                                             \
+            {                                                                                                         \
+                int operator()() const                                                                                \
+                {                                                                                                     \
+                    return expander<Args...>()();                                                                     \
+                }                                                                                                     \
+            };                                                                                                        \
+            const size_t ignore_this_warning = expander<list_of_types>()();                                           \
+        }                                                                                                             \
+    }                                                                                                                 \
+    template <typename test_type>                                                                                     \
+    template <typename T>                                                                                             \
+    void name<test_type>::operator()(const T& args) const /**/
 
 #define ADD_TESTS(name, data) UnitTests::MiniSuite::Instance().AddParamTest(data, name, #name, __FILE__, __LINE__);
 
