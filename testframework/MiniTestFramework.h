@@ -210,7 +210,7 @@ namespace UnitTests
             print(os, 0, " Skipped.\n");
             print(os, failures.size(), " Failures.\n");
             print(os, errors.size(), " Errors.\n");
-            print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms");
+            print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
             return static_cast<int>(failures.size());
         }
 
