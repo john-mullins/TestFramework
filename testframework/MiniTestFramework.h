@@ -4,6 +4,7 @@
 #include "TestHelpers.h"
 #include "assertions.h"
 #include "testfailure.h"
+#include <ctime>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -37,12 +38,6 @@ namespace UnitTests
     struct typelist
     {
     };
-
-    template <typename T, typename... Args>
-    std::unique_ptr<T> make_unique(Args&&... args)
-    {
-        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-    }
 
     class MiniSuite
     {
@@ -137,7 +132,7 @@ namespace UnitTests
         template <class Function>
         size_t AddTest(Function fn, const char* name, const char* file, int line)
         {
-            auto test = std::unique_ptr<Test>(UnitTests::make_unique<FunctionTest<Function>>(fn, name, file, line));
+            auto test = std::unique_ptr<Test>(std::make_unique<FunctionTest<Function>>(fn, name, file, line));
             return AddTest(std::move(test));
         }
 
@@ -145,7 +140,7 @@ namespace UnitTests
         size_t AddParamTest(const Container& cont, Function fn, const char* name, const char* file, int line)
         {
             auto test = std::unique_ptr<Test>(
-                UnitTests::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
+                std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
             return AddTest(std::move(test));
         }
 
@@ -175,10 +170,11 @@ namespace UnitTests
 
         int RunTests(const std::vector<std::string>& args, std::ostream& os)
         {
-            auto verbose   = IsVerbose(args);
-            auto failures  = std::vector<std::pair<std::string, std::string>>{};
-            auto errors    = std::vector<std::pair<std::string, std::string>>{};
-            auto num_tests = 0U;
+            auto verbose    = IsVerbose(args);
+            auto failures   = std::vector<std::pair<std::string, std::string>>{};
+            auto errors     = std::vector<std::pair<std::string, std::string>>{};
+            auto num_tests  = 0U;
+            auto start_time = clock();
             for (auto& test : tests)
             {
                 for (int index = 0; index != test->NumTests(); ++index)
@@ -207,12 +203,14 @@ namespace UnitTests
                 }
             }
             print(os, "\n");
+            auto end_time = clock();
             show_failures(os, errors, "Errors");
             show_failures(os, failures, "Failures");
             print(os, num_tests, " Tests.\n");
             print(os, 0, " Skipped.\n");
             print(os, failures.size(), " Failures.\n");
             print(os, errors.size(), " Errors.\n");
+            print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms");
             return static_cast<int>(failures.size());
         }
 
@@ -325,7 +323,6 @@ namespace UnitTests
                     return expander<T>()(), expander<Args...>()();                                                    \
                 }                                                                                                     \
             };                                                                                                        \
-                                                                                                                      \
             template <typename... Args>                                                                               \
             struct expander<UnitTests::typelist<Args...>>                                                             \
             {                                                                                                         \
