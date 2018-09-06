@@ -20,6 +20,12 @@ namespace UnitTests
 #define PP_CAT_AGAIN_II(p, res) res
 #endif
 
+    template <typename T, typename... Args>
+    std::unique_ptr<T> make_unique(Args&&... args)
+    {
+        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
+
     template <typename T>
     std::ostream& print(std::ostream& s, const T& arg)
     {
@@ -124,15 +130,15 @@ namespace UnitTests
 
         size_t AddTest(void (*fn)(), const char* name, const char* file, int line)
         {
-            auto test = std::unique_ptr<Test>(std::make_unique<FunctionTest>(fn, name, file, line));
+            auto test = std::unique_ptr<Test>(make_unique<FunctionTest>(fn, name, file, line));
             return AddTest(std::move(test));
         }
 
         template <class Container, class Function>
         size_t AddParamTest(const Container& cont, Function fn, const char* name, const char* file, int line)
         {
-            auto test = std::unique_ptr<Test>(
-                std::make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
+            auto test =
+                std::unique_ptr<Test>(make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
             return AddTest(std::move(test));
         }
 
@@ -146,7 +152,8 @@ namespace UnitTests
 
         bool IsVerbose(const std::vector<std::string>& args)
         {
-            return std::any_of(begin(args), end(args), [](const auto& s) { return s == "-v" || s == "--verbose"; });
+            return std::any_of(
+                begin(args), end(args), [](const std::string& s) { return s == "-v" || s == "--verbose"; });
         }
 
         void show_failures(
@@ -155,8 +162,9 @@ namespace UnitTests
             if (!failures.empty())
             {
                 print(os, type, " :-\n");
-                std::for_each(begin(failures), end(failures),
-                    [&](auto f) { print(os, f.second, " while testing TEST(", f.first, ")\n"); });
+                std::for_each(begin(failures), end(failures), [&](const std::pair<std::string, std::string>& f) {
+                    print(os, f.second, " while testing TEST(", f.first, ")\n");
+                });
             }
         }
 

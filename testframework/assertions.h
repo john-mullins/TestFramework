@@ -8,6 +8,7 @@
 #include <functional>
 #include <iterator>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 using std::begin;
@@ -71,11 +72,11 @@ using std::end;
             FAIL((msg) +                                                                             \
                  "\n"                                                                                \
                  "Exception " #exception " was raised but what() did not contain expected message\n" \
-                 "Expected : <"s +                                                                   \
+                 "Expected : <" s +                                                                  \
                  (expectedmsg) +                                                                     \
                  ">\n"                                                                               \
-                 "Actual   : <"s +                                                                   \
-                 what + ">"s);                                                                       \
+                 "Actual   : <" s +                                                                  \
+                 what + ">" s);                                                                      \
         }                                                                                            \
     }                                                                                                \
     /**/
@@ -166,15 +167,16 @@ namespace UnitTests
         template <class T, class U>
         void Equals(const std::string& msg, const T& expected, const U& actual) const
         {
-            if (!are_equal(std::common_type_t<T, U>(expected), std::common_type_t<T, U>(actual)))
+            using common = typename std::common_type<T, U>::type;
+            if (!are_equal(common(expected), common(actual)))
             {
                 auto s = std::ostringstream{};
                 if (!msg.empty())
                     s << stream(msg) << " ";
 
                 s << std::boolalpha << "\n";
-                s << "    Expected <" << stream_with_coercion(std::common_type_t<T, U>(expected), expected) << ">\n";
-                s << "     but got <" << stream_with_coercion(std::common_type_t<T, U>(actual), actual) << ">\n";
+                s << "    Expected <" << stream_with_coercion(common(expected), expected) << ">\n";
+                s << "     but got <" << stream_with_coercion(common(actual), actual) << ">\n";
                 s << "  ";
                 Error(s.str());
             }
@@ -194,14 +196,15 @@ namespace UnitTests
         template <class T, class U>
         void NotEquals(const std::string& msg, const T& expected, const U& actual) const
         {
-            if (are_equal(std::common_type_t<T, U>(expected), std::common_type_t<T, U>(actual)))
+            using common = typename std::common_type<T, U>::type;
+            if (are_equal(common(expected), common(actual)))
             {
                 auto s = std::ostringstream{};
                 if (!msg.empty())
                     s << stream(msg) << " ";
 
                 s << std::boolalpha;
-                s << "Wasn't expecting to get <" << stream(std::common_type_t<T, U>(actual)) << ">";
+                s << "Wasn't expecting to get <" << stream(common(actual)) << ">";
                 Error(s.str());
             }
         }
@@ -383,12 +386,12 @@ namespace UnitTests
         // is a start.
         void MultiLineEquals(std::string message, std::vector<std::string> expected, std::vector<std::string> got)
         {
-            auto width = std::max_element(
-                begin(expected), end(expected), [](const auto& s1, const auto& s2) { return s1.size() < s2.size(); })
-                             ->size();
-            auto e      = std::move(expected);
-            auto g      = std::move(got);
-            auto adjust = [&](const std::string& s1) { return ljust(s1, width, ' '); };
+            auto max_elem = std::max_element(begin(expected), end(expected),
+                [](const std::string& s1, const std::string& s2) { return s1.size() < s2.size(); });
+            auto width    = max_elem->size();
+            auto e        = std::move(expected);
+            auto g        = std::move(got);
+            auto adjust   = [&](const std::string& s1) { return ljust(s1, width, ' '); };
             std::transform(begin(expected), end(expected), begin(expected), adjust);
             std::transform(begin(got), end(got), begin(got), adjust);
             RangeEquals(message, e, g);

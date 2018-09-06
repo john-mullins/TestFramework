@@ -9,11 +9,9 @@
 #include <string>
 #include <vector>
 
-using namespace std::literals;
-
 TEST(string)
 {
-    auto s{"Hello, World"s};
+    auto s  = std::string{"Hello, World"};
     auto ss = std::stringstream{};
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("Hello, World", ss.str());
@@ -148,18 +146,10 @@ TEST(std_array)
 
 TEST(std_pair)
 {
-    auto s  = std::pair<int, std::string>{7, "Pieces of gold"s};
+    auto s  = std::pair<int, std::string>{7, std::string("Pieces of gold")};
     auto ss = std::stringstream{};
     ss << UnitTests::stream_any(s);
     ASSERT_EQUALS("(7, Pieces of gold)", ss.str());
-}
-
-TEST(std_tuple)
-{
-    auto s  = std::tuple<int, std::string, unsigned int>{7, "Pieces of gold"s, 257};
-    auto ss = std::stringstream{};
-    ss << UnitTests::stream_any(s);
-    ASSERT_EQUALS("(7, Pieces of gold, 0x00000101)", ss.str());
 }
 
 namespace test

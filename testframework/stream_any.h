@@ -171,58 +171,11 @@ namespace UnitTests
 
     namespace stream_any_details
     {
-
-        // here provide some overloads for some fairly common types that we can introspect, and stream_any a bit deeper.
-
-        //  Here we have a pair of functions that implement std::apply
-        //  apply is a C++17 function, these work in C++14
-        template <typename Function, typename Tuple, std::size_t... I>
-        constexpr decltype(auto) apply_impl(Function&& f, Tuple&& t, std::index_sequence<I...> /*unused*/)
-        {
-            return f(std::get<I>(std::forward<Tuple>(t))...);
-        }
-
-        template <typename Function, typename Tuple>
-        constexpr decltype(auto) apply_tuple(Function&& f, Tuple&& t)
-        {
-            return apply_impl(std::forward<Function>(f), std::forward<Tuple>(t),
-                std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
-        }
-
-        //  Tuple support
-        template <typename Head>
-        void output_tuple(std::ostream& s, const Head& t)
-        {
-            s << stream_any(t);
-        }
-
-        template <typename Head, typename... Tail>
-        void output_tuple(std::ostream& s, const Head& head, Tail... tail)
-        {
-            s << stream_any(head) << ", ";
-            output_tuple(s, std::forward<Tail>(tail)...);
-        }
-
-        template <template <typename...> class tuple, typename... Ts>
-        void output_container(std::ostream& s, const tuple<Ts...>& tup)
-        {
-            s << "(";
-            auto f = [&s](auto... tail) { output_tuple(s, std::forward<Ts>(tail)...); };
-            apply_tuple(f, tup);
-            s << ")";
-        }
-
-        template <typename... Ts>
-        void output(std::ostream& s, const std::tuple<Ts...>& tup, const std::false_type& /*unused*/)
-        {
-            output_container(s, tup);
-        }
-
         // Pair support
         template <typename First, typename Second>
         void output(std::ostream& s, const std::pair<First, Second>& tup, const std::false_type& /*unused*/)
         {
-            output_container(s, tup);
+            s << "(" << tup.first << ", " << tup.second << ")";
         }
 
         template <typename T>
@@ -239,7 +192,10 @@ namespace UnitTests
             {
                 auto first = begin(t);
                 s << stream_any(*first++);
-                std::for_each(first, end(t), [&s](const auto& value) { s << ", " << stream_any(value); });
+                for (; first != end(t); ++first)
+                {
+                    s << ", " << stream_any(*first);
+                }
             }
             s << "]";
         }

@@ -3,8 +3,6 @@
 #include <deque>
 #include <list>
 
-using namespace std::literals;
-
 TEST(fail)
 {
     try
@@ -76,7 +74,7 @@ TEST(equals_msg)
 {
     try
     {
-        ASSERT_EQUALS("Message", "Hello"s, "World"s);
+        ASSERT_EQUALS("Message", std::string("Hello"), std::string("World"));
         FAIL("ASSERT_EQUALS should have fired here.");
     }
     catch (UnitTests::TestFailure& e)
