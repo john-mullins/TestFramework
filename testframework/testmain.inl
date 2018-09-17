@@ -1,5 +1,6 @@
 #include <ctime>
 #include <iostream>
+#include <sstream>
 
 namespace UnitTests
 {

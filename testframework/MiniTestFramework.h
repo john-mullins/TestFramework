@@ -6,7 +6,6 @@
 #include "testfailure.h"
 
 #include <memory>
-#include <sstream>
 #include <utility>
 #include <vector>
 
