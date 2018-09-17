@@ -4,8 +4,7 @@
 #include "TestHelpers.h"
 #include "assertions.h"
 #include "testfailure.h"
-#include <ctime>
-#include <iostream>
+
 #include <memory>
 #include <sstream>
 #include <utility>
@@ -20,19 +19,6 @@ namespace UnitTests
 #define PP_CAT_AGAIN(a, b) PP_CAT_AGAIN_II(~, a##b)
 #define PP_CAT_AGAIN_II(p, res) res
 #endif
-
-    template <typename T>
-    std::ostream& print(std::ostream& s, const T& arg)
-    {
-        return s << arg;
-    }
-
-    template <typename T, typename... Args>
-    std::ostream& print(std::ostream& s, const T& arg, Args... args)
-    {
-        print(s, arg);
-        return print(s, args...);
-    }
 
     template <typename... Types>
     struct typelist
@@ -152,70 +138,19 @@ namespace UnitTests
             return AddParamTest(std::vector<T>(begin(data), end(data)), fn, name, file, line);
         }
 
-        bool IsVerbose(const std::vector<std::string>& args)
-        {
-            return std::any_of(begin(args), end(args), [](const auto& s) { return s == "-v" || s == "--verbose"; });
-        }
+        bool IsVerbose(const std::vector<std::string>& args);
 
         void show_failures(
-            std::ostream& os, const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)
-        {
-            if (!failures.empty())
-            {
-                print(os, type, " :-\n");
-                std::for_each(begin(failures), end(failures),
-                    [&](auto f) { print(os, f.second, " while testing TEST(", f.first, ")\n"); });
-            }
-        }
+            std::ostream& os, const std::vector<std::pair<std::string, std::string>> failures, const std::string& type);
 
-        int RunTests(const std::vector<std::string>& args, std::ostream& os)
-        {
-            auto verbose    = IsVerbose(args);
-            auto failures   = std::vector<std::pair<std::string, std::string>>{};
-            auto errors     = std::vector<std::pair<std::string, std::string>>{};
-            auto num_tests  = 0U;
-            auto start_time = clock();
-            for (auto& test : tests)
-            {
-                for (int index = 0; index != test->NumTests(); ++index)
-                {
-                    auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
-                    if (verbose)
-                    {
-                        print(os, "Running ", test->BareName(indexs), " ");
-                    }
-                    try
-                    {
-                        ++num_tests;
-                        test->Run(index);
-                        print(os, !verbose ? "." : "OK\n");
-                    }
-                    catch (TestFailure& e)
-                    {
-                        failures.emplace_back(test->Name(indexs), e.what());
-                        print(os, !verbose ? "F" : "FAIL\n");
-                    }
-                    catch (const std::exception& e)
-                    {
-                        errors.emplace_back(test->Name(indexs), e.what());
-                        print(os, !verbose ? "E" : "EXCEPTION\n");
-                    }
-                }
-            }
-            print(os, "\n");
-            auto end_time = clock();
-            show_failures(os, errors, "Errors");
-            show_failures(os, failures, "Failures");
-            print(os, num_tests, " Tests.\n");
-            print(os, 0, " Skipped.\n");
-            print(os, failures.size(), " Failures.\n");
-            print(os, errors.size(), " Errors.\n");
-            print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
-            return static_cast<int>(failures.size());
-        }
+        int RunTests(const std::vector<std::string>& args, std::ostream& os);
 
     private:
-        std::vector<std::unique_ptr<Test>> tests;
+        std::vector<std::unique_ptr<Test>>               tests;
+        std::vector<std::pair<std::string, std::string>> failures;
+        std::vector<std::pair<std::string, std::string>> errors;
+
+        int run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, std::ostream& os);
     };
 
 #define TEST(name)                                                                         \
@@ -361,29 +296,10 @@ namespace UnitTests
     template <typename T>                                    \
     void name::operator()(T) const
 
-#define TEST_MAIN()                                                           \
-    UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                    \
-    {                                                                         \
-        static UnitTests::MiniSuite runner;                                   \
-        return runner;                                                        \
-    }                                                                         \
-                                                                              \
-    std::string UnitTests::FormatError(std::string file, int line, int error) \
-    {                                                                         \
-        auto msg(std::move(file));                                            \
-        msg += "(" + std::to_string(line) + ")";                              \
-        msg += " : error A" + std::to_string(error) + ": ";                   \
-        return msg;                                                           \
-    }                                                                         \
-                                                                              \
-    int main(int argc, char** argv)                                           \
-    {                                                                         \
-        auto end_argv = std::next(argv, argc);                                \
-        auto args     = std::vector<std::string>(argv, end_argv);             \
-        return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);    \
-    }                                                                         \
-    /**/
-
 } // namespace UnitTests
+
+#ifdef TEST_MAIN
+#include "testmain.inl"
+#endif
 
 #endif
