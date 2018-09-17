@@ -15,6 +15,23 @@ namespace UnitTests
         print(s, arg);
         return print(s, args...);
     }
+    std::string MiniSuite::Test::BareName(const std::string& indexs) const
+    {
+        return m_name + indexs;
+    }
+
+    std::string MiniSuite::Test::Name(const std::string& indexs) const
+    {
+        std::stringstream s;
+        s << BareName(indexs) << " @ " << m_file << ':' << m_line;
+        return s.str();
+    }
+
+    size_t MiniSuite::AddTest(std::unique_ptr<Test> test)
+    {
+        tests.push_back(std::move(test));
+        return 0;
+    }
 
     bool MiniSuite::IsVerbose(const std::vector<std::string>& args)
     {

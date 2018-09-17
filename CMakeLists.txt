@@ -50,6 +50,7 @@ set(HDR_FILES
         testframework/testfailure.h
         testframework/streamfortestoutput.h
         testframework/TestHelpers.h
+        testframework/testmain.inl
 )
 
 install(FILES

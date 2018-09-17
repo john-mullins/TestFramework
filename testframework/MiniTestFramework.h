@@ -41,17 +41,9 @@ namespace UnitTests
             virtual int  NumTests() const = 0;
             virtual ~Test()               = default;
 
-            std::string BareName(const std::string& indexs) const
-            {
-                return m_name + indexs;
-            }
+            std::string BareName(const std::string& indexs) const;
 
-            std::string Name(const std::string& indexs) const
-            {
-                std::stringstream s;
-                s << BareName(indexs) << " @ " << m_file << ':' << m_line;
-                return s.str();
-            }
+            std::string Name(const std::string& indexs) const;
 
         private:
             std::string m_name;
@@ -109,11 +101,7 @@ namespace UnitTests
             Function  m_fn;
         };
 
-        size_t AddTest(std::unique_ptr<Test> test)
-        {
-            tests.push_back(std::move(test));
-            return 0;
-        }
+        size_t AddTest(std::unique_ptr<Test> test);
 
         template <class Function>
         size_t AddTest(Function fn, const char* name, const char* file, int line)
