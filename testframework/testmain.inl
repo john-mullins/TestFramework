@@ -22,6 +22,15 @@ namespace UnitTests
     class Reporter
     {
     public:
+        enum
+        {
+            Passed,
+            Failed,
+            Skipped,
+            Error,
+            Test
+        };
+
         virtual void start_test(std::string suite, std::string test) = 0;
 
         virtual void add_failure(std::string msg) = 0;
@@ -37,31 +46,14 @@ namespace UnitTests
         virtual ~Reporter() = default;
     };
 
-    class StreamReporter : public Reporter
+    class ReporterCommon : public Reporter
     {
     public:
-        enum
-        {
-            Passed,
-            Failed,
-            Skipped,
-            Error,
-            Test
-        };
-
-        StreamReporter(std::ostream& os, bool verbose) : m_os(os), m_verbose(verbose), m_error(Passed)
-        {
-        }
-
         void start_test(std::string suite, std::string test) override
         {
             m_current_suite = suite;
             m_current_test  = test;
             m_error         = Passed;
-            if (m_verbose)
-            {
-                print(m_os, "Running ", m_current_test, " ");
-            }
         }
 
         void add_failure(std::string msg) override
@@ -81,39 +73,14 @@ namespace UnitTests
             m_error = Skipped;
         }
 
-        void end_test() override
+        int get_error() const
         {
-            switch (m_error)
-            {
-                case Passed:
-                    print(m_os, m_verbose ? "OK\n" : ".");
-                    break;
-                case Failed:
-                    print(m_os, m_verbose ? "FAIL\n" : "F");
-                    break;
-                case Skipped:
-                    print(m_os, m_verbose ? "SKIP\n" : "S");
-                    break;
-                case Error:
-                    print(m_os, m_verbose ? "ERROR\n" : "E");
-                    break;
-            }
-            m_results[m_current_suite].emplace_back(m_current_test, m_error, m_msg);
+            return m_error;
         }
 
-        void report() override
+        void end_test() override
         {
-            print(m_os, "\n");
-            auto errors   = show_results(Error, "Errors");
-            auto failures = show_results(Failed, "Failures");
-            auto skipped  = show_results(Skipped, "Skipped");
-
-            print(m_os, count_tests(Test), " Tests.\n");
-            print(m_os, skipped, " Skipped.\n");
-            print(m_os, failures, " Failures.\n");
-            print(m_os, errors, " Errors.\n");
-
-            // show_stats();
+            m_results[m_current_suite].emplace_back(m_current_test, get_error(), m_msg);
         }
 
         int count_tests(int error_type)
@@ -128,37 +95,6 @@ namespace UnitTests
             return num_tests;
         }
 
-        int show_results(int error_type, const std::string& msg)
-        {
-            auto num_errors = count_tests(error_type);
-            if (num_errors)
-            {
-                print(m_os, msg, " :-\n");
-                for (auto& suite : m_results)
-                {
-                    auto tests = suite.second;
-                    for (auto& result : tests)
-                    {
-                        if (result.error == error_type)
-                        {
-                            //  Show err0r
-                            print(m_os, result.msg, " while testing TEST(", result.name, ")\n");
-                        }
-                    }
-                }
-            }
-
-            return num_errors;
-        }
-
-    private:
-        std::ostream& m_os;
-        bool          m_verbose;
-        std::string   m_current_suite;
-        std::string   m_current_test;
-        int           m_error;
-        std::string   m_msg;
-
         struct results
         {
             std::string name;
@@ -170,7 +106,98 @@ namespace UnitTests
             }
         };
 
+        const std::map<std::string, std::vector<results>>& get_results() const
+        {
+            return m_results;
+        }
+
+    private:
+        std::string m_current_suite;
+        std::string m_current_test;
+
+        std::string m_msg;
+        int         m_error = Passed;
+
         std::map<std::string, std::vector<results>> m_results;
+    };
+
+    class StreamReporter : public ReporterCommon
+    {
+    public:
+        using super = ReporterCommon;
+        StreamReporter(std::ostream& os, bool verbose) : m_os(os), m_verbose(verbose)
+        {
+        }
+
+        void start_test(std::string suite, std::string test) override
+        {
+            super::start_test(suite, test);
+            if (m_verbose)
+            {
+                print(m_os, "Running ", test, " ");
+            }
+        }
+
+        void end_test() override
+        {
+            switch (get_error())
+            {
+                case Passed:
+                    print(m_os, m_verbose ? "OK\n" : ".");
+                    break;
+                case Failed:
+                    print(m_os, m_verbose ? "FAIL\n" : "F");
+                    break;
+                case Skipped:
+                    print(m_os, m_verbose ? "SKIP\n" : "S");
+                    break;
+                case Error:
+                    print(m_os, m_verbose ? "ERROR\n" : "E");
+                    break;
+            }
+            super::end_test();
+        }
+
+        void report() override
+        {
+            print(m_os, "\n");
+            auto errors   = show_results(Error, "Errors");
+            auto failures = show_results(Failed, "Failures");
+            auto skipped  = show_results(Skipped, "Skipped");
+
+            print(m_os, count_tests(Test), " Tests.\n");
+            print(m_os, skipped, " Skipped.\n");
+            print(m_os, failures, " Failures.\n");
+            print(m_os, errors, " Errors.\n");
+        }
+
+        int show_results(int error_type, const std::string& msg)
+        {
+            auto num_errors = count_tests(error_type);
+            if (num_errors)
+            {
+                print(m_os, msg, " :-\n");
+                for (auto& suite : get_results())
+                {
+                    auto tests = suite.second;
+                    for (auto& result : tests)
+                    {
+                        if (result.error == error_type)
+                        {
+                            //  Show err0r
+                            print(m_os, "In suite: ", suite.first, " ", result.msg, " while testing TEST(", result.name,
+                                ")\n");
+                        }
+                    }
+                }
+            }
+
+            return num_errors;
+        }
+
+    private:
+        std::ostream& m_os;
+        bool          m_verbose;
     };
 
     std::string MiniSuite::Test::BareName(const std::string& indexs) const
@@ -183,6 +210,10 @@ namespace UnitTests
         std::stringstream s;
         s << BareName(indexs) << " @ " << m_file << ':' << m_line;
         return s.str();
+    }
+    std::string MiniSuite::Test::Suite() const
+    {
+        return m_suite;
     }
 
     size_t MiniSuite::AddTest(std::unique_ptr<Test> test)
@@ -209,26 +240,26 @@ namespace UnitTests
 
     int MiniSuite::RunTests(const std::vector<std::string>& args, std::ostream& os)
     {
-        auto                      verbose    = IsVerbose(args);
-        auto                      start_time = clock();
-        std::unique_ptr<Reporter> reporter{new StreamReporter(os, verbose)};
+        auto verbose    = IsVerbose(args);
+        auto start_time = clock();
 
+        auto reporter  = std::make_unique<StreamReporter>(os, verbose);
         auto num_tests = run_tests(tests, verbose, *reporter);
         reporter->report();
         auto end_time = clock();
         print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
         return static_cast<int>(failures.size());
-    }
+    } // namespace UnitTests
 
     int MiniSuite::run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, Reporter& reporter)
     {
         auto num_tests = 0U;
         for (auto& test : tests)
         {
-            for (int index = 0; index != test->NumTests(); ++index)
+            for (auto index = 0; index != test->NumTests(); ++index)
             {
                 auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
-                reporter.start_test("anon", test->Name(indexs));
+                reporter.start_test(test->Suite(), test->Name(indexs));
                 try
                 {
                     test->Run(index);
