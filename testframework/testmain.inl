@@ -1,4 +1,5 @@
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -31,7 +32,7 @@ namespace UnitTests
             Test
         };
 
-        virtual void start_test(std::string suite, std::string test) = 0;
+        virtual void start_test(std::string suite, std::string test, std::string base) = 0;
 
         virtual void add_failure(std::string msg) = 0;
 
@@ -49,10 +50,11 @@ namespace UnitTests
     class ReporterCommon : public Reporter
     {
     public:
-        void start_test(std::string suite, std::string test) override
+        void start_test(std::string suite, std::string test, std::string base_name) override
         {
-            m_current_suite = suite;
-            m_current_test  = test;
+            m_current_suite = std::move(suite);
+            m_current_test  = std::move(test);
+            m_current_base  = std::move(base_name);
             m_error         = Passed;
         }
 
@@ -80,7 +82,26 @@ namespace UnitTests
 
         void end_test() override
         {
-            m_results[m_current_suite].emplace_back(m_current_test, get_error(), m_msg);
+            m_results[m_current_suite].emplace_back(m_current_test, m_current_base, get_error(), m_msg);
+        }
+
+        struct results
+        {
+            std::string name;
+            std::string base_name;
+            int         error;
+            std::string msg;
+
+            results(std::string n, std::string b, int e, std::string m)
+                : name(std::move(n)), base_name(std::move(b)), error(e), msg(std::move(m))
+            {
+            }
+        };
+
+        int count_tests(const std::vector<results>& tests, int error_type)
+        {
+            return std::count_if(begin(tests), end(tests),
+                [error_type](const results& result) { return error_type == Test || result.error == error_type; });
         }
 
         int count_tests(int error_type)
@@ -89,23 +110,12 @@ namespace UnitTests
             for (auto& suite : m_results)
             {
                 auto tests = suite.second;
-                num_tests += std::count_if(begin(tests), end(tests),
-                    [error_type](const results& result) { return error_type == Test || result.error == error_type; });
+                num_tests += count_tests(tests, error_type);
             }
             return num_tests;
         }
 
-        struct results
-        {
-            std::string name;
-            int         error;
-            std::string msg;
-
-            results(std::string n, int e, std::string m) : name(std::move(n)), error(e), msg(std::move(m))
-            {
-            }
-        };
-
+    protected:
         const std::map<std::string, std::vector<results>>& get_results() const
         {
             return m_results;
@@ -114,7 +124,7 @@ namespace UnitTests
     private:
         std::string m_current_suite;
         std::string m_current_test;
-
+        std::string m_current_base;
         std::string m_msg;
         int         m_error = Passed;
 
@@ -129,9 +139,9 @@ namespace UnitTests
         {
         }
 
-        void start_test(std::string suite, std::string test) override
+        void start_test(std::string suite, std::string test, std::string base) override
         {
-            super::start_test(suite, test);
+            super::start_test(std::move(suite), std::move(test), std::move(base));
             if (m_verbose)
             {
                 print(m_os, "Running ", test, " ");
@@ -200,6 +210,82 @@ namespace UnitTests
         bool          m_verbose;
     };
 
+    class XMLReporter : public ReporterCommon
+    {
+    public:
+        using super = ReporterCommon;
+        XMLReporter(const std::string& filename) : m_filename(filename)
+        {
+        }
+
+        void write_testcase(
+            std::ostream& s, const results& result, const std::string& classname, const std::string& indent)
+        {
+            if (result.error == Passed)
+            {
+                s << indent << "<testcase classname=\"" << classname << "\" name=\"" << result.base_name << "\" />\n";
+            }
+            else
+            {
+                s << indent << "<testcase classname=\"" << classname << "\" name=\"" << result.base_name << "\">\n";
+                auto new_indent = indent + "  ";
+                if (result.error == Skipped)
+                {
+                    s << new_indent << "<skipped message=\"" << result.msg << "\"/>\n";
+                }
+                else if (result.error == Failed)
+                {
+                    s << new_indent << "<Failure message=\"Test Failure\">\n";
+                    s << result.msg << "\n";
+                    s << new_indent << "</Failure>\n";
+                }
+                else if (result.error == Error)
+                {
+                    s << new_indent << "<Error message=\"Unexpected Exception encountered\">\n";
+                    s << result.msg << "\n";
+                    s << new_indent << "</Error>\n";
+                }
+                s << indent << "</testcase>\n";
+            }
+        }
+
+        void write_suite(std::ostream& s, const std::string& name, const std::vector<results>& results,
+            const std::string& indent, int id)
+        {
+            auto tests    = count_tests(results, Test);
+            auto failures = count_tests(results, Failed);
+            auto errors   = count_tests(results, Error);
+            auto skipped  = count_tests(results, Skipped);
+
+            s << indent << "<testsuite id=\"" << id << "\" name=\"" << name << "\" tests=\"" << tests
+              << "\" failures=\"" << failures << "\" errors=\"" << errors << "\" skipped=\"" << skipped << "\">\n";
+
+            for (auto& result : results)
+            {
+                write_testcase(s, result, name, indent + "  ");
+            }
+
+            s << indent << "</testsuite>\n";
+        }
+
+        void report() override
+        {
+            auto f = std::ofstream(m_filename);
+            f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+            f << "<testsuites>\n";
+
+            int id = 0;
+            for (auto& result : get_results())
+            {
+                write_suite(f, result.first, result.second, "  ", id++);
+            }
+            f << "</testsuites>\n";
+        }
+
+    private:
+        std::string m_filename;
+    };
+
     std::string MiniSuite::Test::BareName(const std::string& indexs) const
     {
         return m_name + indexs;
@@ -243,13 +329,14 @@ namespace UnitTests
         auto verbose    = IsVerbose(args);
         auto start_time = clock();
 
-        auto reporter  = std::make_unique<StreamReporter>(os, verbose);
+        auto reporter = std::make_unique<StreamReporter>(os, verbose);
+
         auto num_tests = run_tests(tests, verbose, *reporter);
         reporter->report();
         auto end_time = clock();
         print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
         return static_cast<int>(failures.size());
-    } // namespace UnitTests
+    }
 
     int MiniSuite::run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, Reporter& reporter)
     {
@@ -259,7 +346,7 @@ namespace UnitTests
             for (auto index = 0; index != test->NumTests(); ++index)
             {
                 auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
-                reporter.start_test(test->Suite(), test->Name(indexs));
+                reporter.start_test(test->Suite(), test->Name(indexs), test->BareName(indexs));
                 try
                 {
                     test->Run(index);
