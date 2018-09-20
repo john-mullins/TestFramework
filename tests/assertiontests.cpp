@@ -7,7 +7,8 @@ using namespace std::literals;
 
 namespace
 {
-    const char* test_suite = "assertions";
+    const char* test_suite = "assertion_tests";
+
     TEST(fail)
     {
         try
