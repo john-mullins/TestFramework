@@ -324,16 +324,35 @@ namespace UnitTests
         }
     }
 
+    std::string FindXMLFilename(const std::vector<std::string>& args)
+    {
+        auto pos = std::find_if(begin(args), end(args), [](const std::string& s) { return s == "--xml" || s == "-x"; });
+        if (pos != end(args))
+        {
+            pos = std::next(pos);
+            if (pos != end(args))
+                return *pos;
+            else
+            {
+                throw std::runtime_error("You must provide a filename for the xml report.");
+            }
+        }
+
+        return "";
+    }
+
     int MiniSuite::RunTests(const std::vector<std::string>& args, std::ostream& os)
     {
         auto verbose    = IsVerbose(args);
         auto start_time = clock();
 
-        auto reporter = std::make_unique<StreamReporter>(os, verbose);
+        auto xml      = FindXMLFilename(args);
+        auto reporter = xml.empty() ? std::unique_ptr<Reporter>(std::make_unique<StreamReporter>(os, verbose)) :
+                                      std::unique_ptr<Reporter>(std::make_unique<XMLReporter>(xml));
 
         auto num_tests = run_tests(tests, verbose, *reporter);
+        auto end_time  = clock();
         reporter->report();
-        auto end_time = clock();
         print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
         return static_cast<int>(failures.size());
     }
@@ -382,7 +401,15 @@ namespace UnitTests
 
 int main(int argc, char** argv)
 {
-    auto end_argv = std::next(argv, argc);
-    auto args     = std::vector<std::string>(argv, end_argv);
-    return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);
+    try
+    {
+        auto end_argv = std::next(argv, argc);
+        auto args     = std::vector<std::string>(argv, end_argv);
+        return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+        return -1;
+    }
 } /**/
