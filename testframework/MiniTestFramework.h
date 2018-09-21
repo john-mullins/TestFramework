@@ -4,9 +4,8 @@
 #include "TestHelpers.h"
 #include "assertions.h"
 #include "testfailure.h"
-#include <iostream>
+
 #include <memory>
-#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -20,24 +19,12 @@ namespace UnitTests
 #define PP_CAT_AGAIN_II(p, res) res
 #endif
 
-    template <typename T, typename... Args>
-    std::unique_ptr<T> make_unique(Args&&... args)
+    template <typename... Types>
+    struct typelist
     {
-        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-    }
+    };
 
-    template <typename T>
-    std::ostream& print(std::ostream& s, const T& arg)
-    {
-        return s << arg;
-    }
-
-    template <typename T, typename... Args>
-    std::ostream& print(std::ostream& s, const T& arg, Args... args)
-    {
-        print(s, arg);
-        return print(s, args...);
-    }
+    class Reporter;
 
     class MiniSuite
     {
@@ -47,7 +34,8 @@ namespace UnitTests
         class Test
         {
         public:
-            Test(std::string name, const char* file, int line) : m_name(std::move(name)), m_file(file), m_line(line)
+            Test(std::string suite, std::string name, const char* file, int line)
+                : m_suite(std::move(suite)), m_name(std::move(name)), m_file(file), m_line(line)
             {
             }
 
@@ -55,29 +43,25 @@ namespace UnitTests
             virtual int  NumTests() const = 0;
             virtual ~Test()               = default;
 
-            std::string BareName(const std::string& indexs) const
-            {
-                return m_name + indexs;
-            }
+            std::string BareName(const std::string& indexs) const;
 
-            std::string Name(const std::string& indexs) const
-            {
-                std::stringstream s;
-                s << BareName(indexs) << " @ " << m_file << ':' << m_line;
-                return s.str();
-            }
+            std::string Name(const std::string& indexs) const;
+
+            std::string Suite() const;
 
         private:
+            std::string m_suite;
             std::string m_name;
             const char* m_file;
             int         m_line;
         };
 
+        template <class Function>
         class FunctionTest : public Test
         {
         public:
-            FunctionTest(void (*fn)(), std::string name, const char* file, int line)
-                : Test(std::move(name), file, line), m_fn(fn)
+            FunctionTest(Function fn, std::string suite, std::string name, const char* file, int line)
+                : Test(std::move(suite), std::move(name), file, line), m_fn(fn)
             {
             }
 
@@ -92,7 +76,7 @@ namespace UnitTests
             }
 
         private:
-            void (*m_fn)();
+            Function m_fn;
         };
 
         template <class Container, class Function>
@@ -101,8 +85,9 @@ namespace UnitTests
         public:
             using param_type = typename Container::value_type;
 
-            ParamFunctionTest(Container cont, const Function& fn, std::string name, const char* file, int line)
-                : Test(std::move(name), file, line), m_cont(std::move(cont)), m_fn(fn)
+            ParamFunctionTest(
+                Container cont, const Function& fn, std::string suite, std::string name, const char* file, int line)
+                : Test(std::move(suite), std::move(name), file, line), m_cont(std::move(cont)), m_fn(fn)
             {
             }
 
@@ -122,127 +107,201 @@ namespace UnitTests
             Function  m_fn;
         };
 
-        size_t AddTest(std::unique_ptr<Test> test)
-        {
-            tests.push_back(std::move(test));
-            return 0;
-        }
+        size_t AddTest(std::unique_ptr<Test> test);
 
-        size_t AddTest(void (*fn)(), const char* name, const char* file, int line)
+        template <class Function>
+        size_t AddTest(Function fn, const char* suite, const char* name, const char* file, int line)
         {
-            auto test = std::unique_ptr<Test>(make_unique<FunctionTest>(fn, name, file, line));
+            auto test = std::unique_ptr<Test>(new FunctionTest<Function>(fn, suite, name, file, line));
             return AddTest(std::move(test));
         }
 
         template <class Container, class Function>
-        size_t AddParamTest(const Container& cont, Function fn, const char* name, const char* file, int line)
+        size_t AddParamTest(
+            const Container& cont, Function fn, const char* suite, const char* name, const char* file, int line)
         {
             auto test =
-                std::unique_ptr<Test>(make_unique<ParamFunctionTest<Container, Function>>(cont, fn, name, file, line));
+                std::unique_ptr<Test>(new ParamFunctionTest<Container, Function>(cont, fn, suite, name, file, line));
             return AddTest(std::move(test));
         }
 
         template <typename T, size_t N, class Function>
-        size_t AddParamTest(const T (&data)[N], Function fn, const char* name, const char* file, int line)
+        size_t AddParamTest(
+            const T (&data)[N], Function fn, const char* suite, const char* name, const char* file, int line)
         {
             using std::begin;
             using std::end;
-            return AddParamTest(std::vector<T>(begin(data), end(data)), fn, name, file, line);
+            return AddParamTest(std::vector<T>(begin(data), end(data)), fn, suite, name, file, line);
         }
 
-        bool IsVerbose(const std::vector<std::string>& args)
-        {
-            return std::any_of(
-                begin(args), end(args), [](const std::string& s) { return s == "-v" || s == "--verbose"; });
-        }
+        bool IsVerbose(const std::vector<std::string>& args);
 
         void show_failures(
-            std::ostream& os, const std::vector<std::pair<std::string, std::string>> failures, const std::string& type)
-        {
-            if (!failures.empty())
-            {
-                print(os, type, " :-\n");
-                std::for_each(begin(failures), end(failures), [&](const std::pair<std::string, std::string>& f) {
-                    print(os, f.second, " while testing TEST(", f.first, ")\n");
-                });
-            }
-        }
+            std::ostream& os, const std::vector<std::pair<std::string, std::string>> failures, const std::string& type);
 
-        int RunTests(const std::vector<std::string>& args, std::ostream& os)
-        {
-            auto verbose   = IsVerbose(args);
-            auto failures  = std::vector<std::pair<std::string, std::string>>{};
-            auto errors    = std::vector<std::pair<std::string, std::string>>{};
-            auto num_tests = 0U;
-            for (auto& test : tests)
-            {
-                for (int index = 0; index != test->NumTests(); ++index)
-                {
-                    auto indexs = std::string(test->NumTests() == 1 ? "" : "[" + std::to_string(index) + "]");
-                    if (verbose)
-                    {
-                        print(os, "Running ", test->BareName(indexs), " ");
-                    }
-                    try
-                    {
-                        ++num_tests;
-                        test->Run(index);
-                        print(os, !verbose ? "." : "OK\n");
-                    }
-                    catch (TestFailure& e)
-                    {
-                        failures.emplace_back(test->Name(indexs), e.what());
-                        print(os, !verbose ? "F" : "FAIL\n");
-                    }
-                    catch (const std::exception& e)
-                    {
-                        errors.emplace_back(test->Name(indexs), e.what());
-                        print(os, !verbose ? "E" : "EXCEPTION\n");
-                    }
-                }
-            }
-            print(os, "\n");
-            show_failures(os, errors, "Errors");
-            show_failures(os, failures, "Failures");
-            print(os, num_tests, " Tests.\n");
-            print(os, 0, " Skipped.\n");
-            print(os, failures.size(), " Failures.\n");
-            print(os, errors.size(), " Errors.\n");
-            return static_cast<int>(failures.size());
-        }
+        int RunTests(const std::vector<std::string>& args, std::ostream& os);
 
     private:
-        std::vector<std::unique_ptr<Test>> tests;
+        std::vector<std::unique_ptr<Test>>               tests;
+        std::vector<std::pair<std::string, std::string>> failures;
+        std::vector<std::pair<std::string, std::string>> errors;
+
+        int run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, Reporter& reporter);
     };
 
-#define TEST(name)                                                                         \
-    void name();                                                                           \
-    namespace                                                                              \
-    {                                                                                      \
-        namespace PP_CAT(unique, __LINE__)                                                 \
-        {                                                                                  \
-            const size_t ignore_this_warning =                                             \
-                UnitTests::MiniSuite::Instance().AddTest(name, #name, __FILE__, __LINE__); \
-        }                                                                                  \
-    }                                                                                      \
+#define TEST1(name)                                                                                    \
+    void name();                                                                                       \
+    namespace                                                                                          \
+    {                                                                                                  \
+        namespace PP_CAT(unique, __LINE__)                                                             \
+        {                                                                                              \
+            const size_t ignore_this_warning =                                                         \
+                UnitTests::MiniSuite::Instance().AddTest(name, test_suite, #name, __FILE__, __LINE__); \
+        }                                                                                              \
+    }                                                                                                  \
     void name() /**/
 
-#define PARAM_TEST(name, data)                                                                          \
-    struct name                                                                                         \
-    {                                                                                                   \
-        template <typename T>                                                                           \
-        void operator()(const T& args) const;                                                           \
-    };                                                                                                  \
-    namespace                                                                                           \
-    {                                                                                                   \
-        namespace PP_CAT(unique, __LINE__)                                                              \
-        {                                                                                               \
-            const size_t ignore_this_warning =                                                          \
-                UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #name, __FILE__, __LINE__); \
-        }                                                                                               \
-    }                                                                                                   \
-    template <typename T>                                                                               \
+#define TEST2(suite, name)                                                                         \
+    void name();                                                                                   \
+    namespace                                                                                      \
+    {                                                                                              \
+        namespace PP_CAT(unique, __LINE__)                                                         \
+        {                                                                                          \
+            const size_t ignore_this_warning =                                                     \
+                UnitTests::MiniSuite::Instance().AddTest(name, #suite, #name, __FILE__, __LINE__); \
+        }                                                                                          \
+    }                                                                                              \
+    void name() /**/
+
+#define TEST_T(suite, name, list_of_types)                                                                         \
+    template <typename test_type>                                                                                  \
+    struct name                                                                                                    \
+    {                                                                                                              \
+        void operator()() const;                                                                                   \
+    };                                                                                                             \
+    namespace                                                                                                      \
+    {                                                                                                              \
+        namespace PP_CAT(unique, __LINE__)                                                                         \
+        {                                                                                                          \
+            template <typename... T>                                                                               \
+            struct expander;                                                                                       \
+                                                                                                                   \
+            template <typename T>                                                                                  \
+            struct expander<T>                                                                                     \
+            {                                                                                                      \
+                int operator()() const                                                                             \
+                {                                                                                                  \
+                    return UnitTests::MiniSuite::Instance().AddTest(name<T>(), #suite, #name, __FILE__, __LINE__); \
+                }                                                                                                  \
+            };                                                                                                     \
+                                                                                                                   \
+            template <typename T, typename... Args>                                                                \
+            struct expander<T, Args...>                                                                            \
+            {                                                                                                      \
+                int operator()() const                                                                             \
+                {                                                                                                  \
+                    return expander<T>()(), expander<Args...>()();                                                 \
+                }                                                                                                  \
+            };                                                                                                     \
+                                                                                                                   \
+            template <typename... Args>                                                                            \
+            struct expander<UnitTests::typelist<Args...>>                                                          \
+            {                                                                                                      \
+                int operator()() const                                                                             \
+                {                                                                                                  \
+                    return expander<Args...>()();                                                                  \
+                }                                                                                                  \
+            };                                                                                                     \
+            const size_t ignore_this_warning = expander<list_of_types>()();                                        \
+        }                                                                                                          \
+    }                                                                                                              \
+    template <typename test_type>                                                                                  \
+    void name<test_type>::operator()() const /**/
+
+#define PARAM_TEST2(name, data)                                                                                     \
+    struct name                                                                                                     \
+    {                                                                                                               \
+        template <typename T>                                                                                       \
+        void operator()(const T& args) const;                                                                       \
+    };                                                                                                              \
+    namespace                                                                                                       \
+    {                                                                                                               \
+        namespace PP_CAT(unique, __LINE__)                                                                          \
+        {                                                                                                           \
+            const size_t ignore_this_warning =                                                                      \
+                UnitTests::MiniSuite::Instance().AddParamTest(data, name(), test_suite, #name, __FILE__, __LINE__); \
+        }                                                                                                           \
+    }                                                                                                               \
+    template <typename T>                                                                                           \
     void name::operator()(const T& args) const /**/
+
+#define PARAM_TEST3(suite, name, data)                                                                          \
+    struct name                                                                                                 \
+    {                                                                                                           \
+        template <typename T>                                                                                   \
+        void operator()(const T& args) const;                                                                   \
+    };                                                                                                          \
+    namespace                                                                                                   \
+    {                                                                                                           \
+        namespace PP_CAT(unique, __LINE__)                                                                      \
+        {                                                                                                       \
+            const size_t ignore_this_warning =                                                                  \
+                UnitTests::MiniSuite::Instance().AddParamTest(data, name(), #suite, #name, __FILE__, __LINE__); \
+        }                                                                                                       \
+    }                                                                                                           \
+    template <typename T>                                                                                       \
+    void name::operator()(const T& args) const /**/
+
+#define PARAM_TEST_T(suite, name, data, list_of_types)                       \
+    template <typename U>                                                    \
+    struct name                                                              \
+    {                                                                        \
+        template <typename T>                                                \
+        void operator()(const T& args) const;                                \
+    };                                                                       \
+    namespace                                                                \
+    {                                                                        \
+        namespace PP_CAT(unique, __LINE__)                                   \
+        {                                                                    \
+            template <typename... T>                                         \
+            struct expander;                                                 \
+                                                                             \
+            template <typename T>                                            \
+            struct expander<T>                                               \
+            {                                                                \
+                int operator()() const                                       \
+                {                                                            \
+                    return UnitTests::MiniSuite::Instance().AddParamTest(    \
+                        data, name<T>(), #suite, #name, __FILE__, __LINE__); \
+                }                                                            \
+            };                                                               \
+                                                                             \
+            template <typename T, typename... Args>                          \
+            struct expander<T, Args...>                                      \
+            {                                                                \
+                int operator()() const                                       \
+                {                                                            \
+                    return expander<T>()(), expander<Args...>()();           \
+                }                                                            \
+            };                                                               \
+            template <typename... Args>                                      \
+            struct expander<UnitTests::typelist<Args...>>                    \
+            {                                                                \
+                int operator()() const                                       \
+                {                                                            \
+                    return expander<Args...>()();                            \
+                }                                                            \
+            };                                                               \
+            const size_t ignore_this_warning = expander<list_of_types>()();  \
+        }                                                                    \
+    }                                                                        \
+    template <typename test_type>                                            \
+    template <typename T>                                                    \
+    void name<test_type>::operator()(const T& args) const /**/
+
+#define GET_MACRO(_1, _2, _3, NAME, ...) NAME
+#define TEST(...) GET_MACRO(__VA_ARGS__, TEST3, TEST2, TEST1, _UNUSED)(__VA_ARGS__)
+#define PARAM_TEST(...) GET_MACRO(__VA_ARGS__, PARAM_TEST3, PARAM_TEST2, PARAM_TEST1, _UNUSED)(__VA_ARGS__)
 
 #define ADD_TESTS(name, data) UnitTests::MiniSuite::Instance().AddParamTest(data, name, #name, __FILE__, __LINE__);
 
@@ -267,29 +326,12 @@ namespace UnitTests
     template <typename T>                                    \
     void name::operator()(T) const
 
-#define TEST_MAIN()                                                           \
-    UnitTests::MiniSuite& UnitTests::MiniSuite::Instance()                    \
-    {                                                                         \
-        static UnitTests::MiniSuite runner;                                   \
-        return runner;                                                        \
-    }                                                                         \
-                                                                              \
-    std::string UnitTests::FormatError(std::string file, int line, int error) \
-    {                                                                         \
-        auto msg(std::move(file));                                            \
-        msg += "(" + std::to_string(line) + ")";                              \
-        msg += " : error A" + std::to_string(error) + ": ";                   \
-        return msg;                                                           \
-    }                                                                         \
-                                                                              \
-    int main(int argc, char** argv)                                           \
-    {                                                                         \
-        auto end_argv = std::next(argv, argc);                                \
-        auto args     = std::vector<std::string>(argv, end_argv);             \
-        return UnitTests::MiniSuite::Instance().RunTests(args, std::cout);    \
-    }                                                                         \
-    /**/
-
 } // namespace UnitTests
+
+static const char* test_suite = "anonymous";
+
+#ifdef TEST_MAIN
+#include "testmain.inl"
+#endif
 
 #endif
