@@ -142,9 +142,7 @@ namespace UnitTests
         int RunTests(const std::vector<std::string>& args, std::ostream& os);
 
     private:
-        std::vector<std::unique_ptr<Test>>               tests;
-        std::vector<std::pair<std::string, std::string>> failures;
-        std::vector<std::pair<std::string, std::string>> errors;
+        std::vector<std::unique_ptr<Test>> tests;
 
         int run_tests(std::vector<std::unique_ptr<Test>>& tests, Reporter& reporter);
     };
@@ -181,7 +179,7 @@ namespace UnitTests
             template <typename T>                                                                                  \
             struct expander<T>                                                                                     \
             {                                                                                                      \
-                int operator()() const                                                                             \
+                size_t operator()() const                                                                          \
                 {                                                                                                  \
                     return UnitTests::MiniSuite::Instance().AddTest(name<T>(), #suite, #name, __FILE__, __LINE__); \
                 }                                                                                                  \
@@ -190,7 +188,7 @@ namespace UnitTests
             template <typename T, typename... Args>                                                                \
             struct expander<T, Args...>                                                                            \
             {                                                                                                      \
-                int operator()() const                                                                             \
+                isize_tnt operator()() const                                                                       \
                 {                                                                                                  \
                     return expander<T>()(), expander<Args...>()();                                                 \
                 }                                                                                                  \
@@ -199,7 +197,7 @@ namespace UnitTests
             template <typename... Args>                                                                            \
             struct expander<UnitTests::typelist<Args...>>                                                          \
             {                                                                                                      \
-                int operator()() const                                                                             \
+                isize_tnt operator()() const                                                                       \
                 {                                                                                                  \
                     return expander<Args...>()();                                                                  \
                 }                                                                                                  \
@@ -248,7 +246,7 @@ namespace UnitTests
             template <typename T>                                            \
             struct expander<T>                                               \
             {                                                                \
-                int operator()() const                                       \
+                size_t operator()() const                                    \
                 {                                                            \
                     return UnitTests::MiniSuite::Instance().AddParamTest(    \
                         data, name<T>(), #suite, #name, __FILE__, __LINE__); \
@@ -258,7 +256,7 @@ namespace UnitTests
             template <typename T, typename... Args>                          \
             struct expander<T, Args...>                                      \
             {                                                                \
-                int operator()() const                                       \
+                size_t operator()() const                                    \
                 {                                                            \
                     return expander<T>()(), expander<Args...>()();           \
                 }                                                            \
@@ -266,7 +264,7 @@ namespace UnitTests
             template <typename... Args>                                      \
             struct expander<UnitTests::typelist<Args...>>                    \
             {                                                                \
-                int operator()() const                                       \
+                size_t operator()() const                                    \
                 {                                                            \
                     return expander<Args...>()();                            \
                 }                                                            \
