@@ -350,14 +350,14 @@ namespace UnitTests
         auto reporter = xml.empty() ? std::unique_ptr<Reporter>(std::make_unique<StreamReporter>(os, verbose)) :
                                       std::unique_ptr<Reporter>(std::make_unique<XMLReporter>(xml));
 
-        run_tests(tests, verbose, *reporter);
+        run_tests(tests, *reporter);
         auto end_time = clock();
         reporter->report();
         print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
         return static_cast<int>(failures.size());
     }
 
-    int MiniSuite::run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, Reporter& reporter)
+    int MiniSuite::run_tests(std::vector<std::unique_ptr<Test>>& tests, Reporter& reporter)
     {
         auto num_tests = 0U;
         for (auto& test : tests)

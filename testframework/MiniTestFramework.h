@@ -146,7 +146,7 @@ namespace UnitTests
         std::vector<std::pair<std::string, std::string>> failures;
         std::vector<std::pair<std::string, std::string>> errors;
 
-        int run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, Reporter& reporter);
+        int run_tests(std::vector<std::unique_ptr<Test>>& tests, Reporter& reporter);
     };
 
 #define _TEST1(name) _TEST(test_suite, name)
