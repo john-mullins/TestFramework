@@ -350,8 +350,8 @@ namespace UnitTests
         auto reporter = xml.empty() ? std::unique_ptr<Reporter>(std::make_unique<StreamReporter>(os, verbose)) :
                                       std::unique_ptr<Reporter>(std::make_unique<XMLReporter>(xml));
 
-        auto num_tests = run_tests(tests, verbose, *reporter);
-        auto end_time  = clock();
+        run_tests(tests, verbose, *reporter);
+        auto end_time = clock();
         reporter->report();
         print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
         return static_cast<int>(failures.size());
