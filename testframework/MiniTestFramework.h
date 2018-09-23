@@ -278,9 +278,10 @@ namespace UnitTests
     template <typename T>                                                    \
     void name<test_type>::operator()(const T& args) const /**/
 
+#define EXPAND(x) x
 #define GET_MACRO(_1, _2, _3, NAME, ...) NAME
-#define TEST(...) GET_MACRO(__VA_ARGS__, _TEST3, _TEST2, _TEST1, _UNUSED)(__VA_ARGS__)
-#define PARAM_TEST(...) GET_MACRO(__VA_ARGS__, _PARAM_TEST3, _PARAM_TEST2, _PARAM_TEST1, _UNUSED)(__VA_ARGS__)
+#define TEST(...) EXPAND(GET_MACRO(__VA_ARGS__, _TEST3, _TEST2, _TEST1, _UNUSED)(__VA_ARGS__))
+#define PARAM_TEST(...) EXPAND(GET_MACRO(__VA_ARGS__, _PARAM_TEST3, _PARAM_TEST2, _UNUSED)(__VA_ARGS__))
 
 #define ADD_TESTS(name, data) UnitTests::MiniSuite::Instance().AddParamTest(data, name, #name, __FILE__, __LINE__);
 
