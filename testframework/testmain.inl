@@ -42,7 +42,7 @@ namespace UnitTests
 
         virtual void end_test() = 0;
 
-        virtual void report() = 0;
+        virtual int report() = 0;
 
         virtual ~Reporter() = default;
     };
@@ -100,8 +100,8 @@ namespace UnitTests
 
         int count_tests(const std::vector<results>& tests, int error_type)
         {
-            return std::count_if(begin(tests), end(tests),
-                [error_type](const results& result) { return error_type == Test || result.error == error_type; });
+            return static_cast<int>(std::count_if(begin(tests), end(tests),
+                [error_type](const results& result) { return error_type == Test || result.error == error_type; }));
         }
 
         int count_tests(int error_type)
@@ -168,7 +168,7 @@ namespace UnitTests
             super::end_test();
         }
 
-        void report() override
+        int report() override
         {
             print(m_os, "\n");
             auto errors   = show_results(Error, "Errors");
@@ -179,6 +179,8 @@ namespace UnitTests
             print(m_os, skipped, " Skipped.\n");
             print(m_os, failures, " Failures.\n");
             print(m_os, errors, " Errors.\n");
+
+            return failures + errors;
         }
 
         int show_results(int error_type, const std::string& msg)
@@ -268,7 +270,7 @@ namespace UnitTests
             s << indent << "</testsuite>\n";
         }
 
-        void report() override
+        int report() override
         {
             auto f = std::ofstream(m_filename);
             f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -280,6 +282,9 @@ namespace UnitTests
                 write_suite(f, result.first, result.second, "  ", id++);
             }
             f << "</testsuites>\n";
+
+            return count_tests(Failed) + count_tests(Error);
+            ;
         }
 
     private:
@@ -319,7 +324,7 @@ namespace UnitTests
         if (!failures.empty())
         {
             print(os, type, " :-\n");
-            std::for_each(begin(failures), end(failures), [&](const std::pair<std::string, std::string>& f) {
+            std::for_each(begin(failures), end(failures), [&](const std::pair<std::string, std::string> f) {
                 print(os, f.second, " while testing TEST(", f.first, ")\n");
             });
         }
@@ -351,17 +356,17 @@ namespace UnitTests
         auto reporter = xml.empty() ? std::unique_ptr<Reporter>(new StreamReporter(os, verbose)) :
                                       std::unique_ptr<Reporter>(new XMLReporter(xml));
 
-        run_tests(tests, verbose, *reporter);
+        run_tests(tests, *reporter);
         auto end_time = clock();
-        reporter->report();
+        auto failures = reporter->report();
         print(os, "\nTime taken = ", 1000.0 * (end_time - start_time) / CLOCKS_PER_SEC, "ms\n");
-        return static_cast<int>(failures.size());
+        return failures;
     }
 
-    int MiniSuite::run_tests(std::vector<std::unique_ptr<Test>>& tests, bool verbose, Reporter& reporter)
+    int MiniSuite::run_tests(std::vector<std::unique_ptr<Test>>& all_tests, Reporter& reporter)
     {
         auto num_tests = 0U;
-        for (auto& test : tests)
+        for (auto& test : all_tests)
         {
             for (auto index = 0; index != test->NumTests(); ++index)
             {
