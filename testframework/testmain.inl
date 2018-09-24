@@ -20,6 +20,18 @@ namespace UnitTests
         return print(s, args...);
     }
 
+    void fail_message(
+        const std::string& msg, const std::string& exception, const std::string& expectedmsg, const std::string& what)
+    {
+        using namespace std::literals;
+        if (what.find(expectedmsg) == std::string::npos)
+        {
+            FAIL(std::string(msg) + "\nException " + exception +
+                 " was raised but what() did not contain expected message\n" + std::string("Expected : <") +
+                 (expectedmsg) + std::string(">\nActual   : <") + what + std::string(">"));
+        }
+    }
+
     class Reporter
     {
     public:
@@ -403,6 +415,7 @@ namespace UnitTests
         msg += " : error A" + std::to_string(error) + ": ";
         return msg;
     }
+
 } // namespace UnitTests
 
 int main(int argc, char** argv)

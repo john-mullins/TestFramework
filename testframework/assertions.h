@@ -47,38 +47,32 @@ using std::end;
 
 #define ASSERT_THROWS(exception, code)                                                            \
     ASSERT_THROWS_MSG(#exception " exception should have been thrown by " #code, exception, code) \
-/**/
+    /**/
+
+namespace UnitTests
+{
+    void fail_message(
+        const std::string& msg, const std::string& exception, const std::string& expectedmsg, const std::string& what);
+}
 
 // Ensure that eval(code) raises `exception`, and exception.what() should contain the string expectedmsg.
 // For example:
 //      std::vector<int> v;
 //      ASSERT_THROWS_WITH_MESSAGE(std::index_error, "out of bounds", v.at(0));
-#define ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, expectedmsg, code)                            \
-    try                                                                                              \
-    {                                                                                                \
-        code;                                                                                        \
-        FAIL(msg);                                                                                   \
-    }                                                                                                \
-    catch (const UnitTests::TestFailure&)                                                            \
-    {                                                                                                \
-        throw;                                                                                       \
-    }                                                                                                \
-    catch (const exception& e)                                                                       \
-    {                                                                                                \
-        using namespace std::literals;                                                               \
-        auto what = std::string{e.what()};                                                           \
-        if (what.find(expectedmsg) == std::string::npos)                                             \
-        {                                                                                            \
-            FAIL((msg) +                                                                             \
-                 "\n"                                                                                \
-                 "Exception " #exception " was raised but what() did not contain expected message\n" \
-                 "Expected : <" s +                                                                  \
-                 (expectedmsg) +                                                                     \
-                 ">\n"                                                                               \
-                 "Actual   : <" s +                                                                  \
-                 what + ">" s);                                                                      \
-        }                                                                                            \
-    }                                                                                                \
+#define ASSERT_THROWS_WITH_MESSAGE_MSG(msg, exception, expectedmsg, code) \
+    try                                                                   \
+    {                                                                     \
+        code;                                                             \
+        FAIL(msg);                                                        \
+    }                                                                     \
+    catch (const UnitTests::TestFailure&)                                 \
+    {                                                                     \
+        throw;                                                            \
+    }                                                                     \
+    catch (const exception& e)                                            \
+    {                                                                     \
+        UnitTests::fail_message(msg, #exception, expectedmsg, e.what());  \
+    }                                                                     \
     /**/
 
 #define ASSERT_THROWS_WITH_MESSAGE(exception, expectedmsg, code)                                 \
