@@ -78,7 +78,7 @@ namespace UnitTests
         template <template <typename...> class op, typename... args>
         struct detector<void_t<op<args...>>, op, args...> : std::true_type
         {
-        };
+        }; //
 
         template <template <typename...> class op, typename... args>
         using is_well_formed = details::detector<void, op, args...>;
